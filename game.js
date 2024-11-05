@@ -16,13 +16,8 @@ class Game {
         this.powerUpTimer = null;
         this.originalSpeed = null;
         this.levelManager = new LevelManager();
-        this.sounds = {
-            eat: new Audio('sounds/eat.mp3'),
-            powerUp: new Audio('sounds/powerup.mp3'),
-            powerDown: new Audio('sounds/powerdown.mp3'),
-            gameOver: new Audio('sounds/gameover.mp3')
-        };
-        this.isSoundEnabled = true;
+        this.sounds = null;
+        this.isSoundEnabled = false;
     }
 
     init() {
@@ -80,12 +75,16 @@ class Game {
     }
 
     resetGame() {
-        // 初始化蛇的位置
+        // 确保初始位置在画布中心
+        const centerX = Math.floor(this.canvas.width / 40);
+        const centerY = Math.floor(this.canvas.height / 40);
+        
         this.snake = [
-            {x: 10, y: 10},
-            {x: 9, y: 10},
-            {x: 8, y: 10}
+            {x: centerX, y: centerY},
+            {x: centerX - 1, y: centerY},
+            {x: centerX - 2, y: centerY}
         ];
+        
         this.direction = 'right';
         this.score = 0;
         this.foodEatenCount = 0;
@@ -151,17 +150,18 @@ class Game {
         clearInterval(this.gameLoop);
         this.gameLoop = null;
         
-        if (window.gameManager) {
-            window.gameManager.isGameActive = false;
-        }
+        // 确保蛇的位置在画布内
+        this.resetGame();
         
         // 更新最高分
         const currentHighScore = localStorage.getItem('highScore') || 0;
         if (this.score > currentHighScore) {
             localStorage.setItem('highScore', this.score);
+            if (window.gameManager) {
+                window.gameManager.loadHighScore();
+            }
         }
         
-        this.resetGame();
         document.getElementById('startBtn').textContent = '开始游戏';
         this.playSound('gameOver');
     }
@@ -202,7 +202,7 @@ class Game {
         this.originalSpeed = this.speed;
         this.speed = this.speed * 0.7; // 提升30%速度
         
-        // 变身视觉效果
+        // 变视觉效果
         this.snake.forEach(segment => {
             this.createPowerUpEffect(segment.x * 20, segment.y * 20);
         });
@@ -335,7 +335,7 @@ class Game {
             this.ctx.arc(pos.x, pos.y, 3, 0, Math.PI * 2);
             this.ctx.fill();
             
-            // 眼球
+            // 球
             this.ctx.fillStyle = 'black';
             this.ctx.beginPath();
             this.ctx.arc(pos.x + pos.pupilOffset.x, pos.y + pos.pupilOffset.y, 1.5, 0, Math.PI * 2);
@@ -503,14 +503,18 @@ class Game {
         }
 
         // 检查边界碰撞
-        if (this.checkBoundaryCollision(head)) {
-            if (!this.isPoweredUp) {
+        const hitBoundary = this.checkBoundaryCollision(head);
+        if (hitBoundary) {
+            if (this.isPoweredUp) {
+                // 变身状态下穿墙
+                if (head.x < 0) head.x = Math.floor(this.canvas.width / 20) - 1;
+                if (head.x >= this.canvas.width / 20) head.x = 0;
+                if (head.y < 0) head.y = Math.floor(this.canvas.height / 20) - 1;
+                if (head.y >= this.canvas.height / 20) head.y = 0;
+            } else {
+                // 非变身状态下碰到边界直接结束游戏
                 this.gameOver();
                 return;
-            } else {
-                // 变身状态下穿墙
-                head.x = (head.x + this.canvas.width / 20) % (this.canvas.width / 20);
-                head.y = (head.y + this.canvas.height / 20) % (this.canvas.height / 20);
             }
         }
 
@@ -527,14 +531,15 @@ class Game {
             this.snake.pop();
         }
 
+        // 只有在确保位置有效后才更新蛇的位置
         this.snake.unshift(head);
     }
 
     checkBoundaryCollision(head) {
         return head.x < 0 || 
-               head.x >= this.canvas.width / 20 || 
+               head.x >= Math.floor(this.canvas.width / 20) || 
                head.y < 0 || 
-               head.y >= this.canvas.height / 20;
+               head.y >= Math.floor(this.canvas.height / 20);
     }
 
     checkOtherCollisions(head) {
@@ -572,10 +577,15 @@ class Game {
     }
 
     playSound(soundName) {
-        if (this.isSoundEnabled && this.sounds[soundName]) {
+        // 暂时禁用音效
+        return;
+        
+        /* 当有音效文件时可以启用这段代码
+        if (this.isSoundEnabled && this.sounds && this.sounds[soundName]) {
             this.sounds[soundName].currentTime = 0;
             this.sounds[soundName].play().catch(e => console.log('Sound play failed:', e));
         }
+        */
     }
 
     showScoreAnimation(score, x, y) {
