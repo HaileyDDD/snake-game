@@ -155,6 +155,52 @@ class GameManager {
             window.open(shareLinks[platform], '_blank');
         }
     }
+
+    toggleSound() {
+        const soundEnabled = localStorage.getItem('soundEnabled') === 'true';
+        localStorage.setItem('soundEnabled', !soundEnabled);
+        this.updateSettingsDisplay();
+    }
+
+    toggleMusic() {
+        const musicEnabled = localStorage.getItem('musicEnabled') === 'true';
+        localStorage.setItem('musicEnabled', !musicEnabled);
+        this.updateSettingsDisplay();
+    }
+
+    toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    changeLanguage(lang) {
+        localStorage.setItem('language', lang);
+        this.updateLanguageDisplay();
+        // 这里可以添加实际的语言切换逻辑
+    }
+
+    updateSettingsDisplay() {
+        const soundEnabled = localStorage.getItem('soundEnabled') === 'true';
+        const musicEnabled = localStorage.getItem('musicEnabled') === 'true';
+        
+        document.querySelector('[onclick="gameManager.toggleSound()"]').textContent = 
+            `声音: ${soundEnabled ? '开' : '关'}`;
+        document.querySelector('[onclick="gameManager.toggleMusic()"]').textContent = 
+            `音乐: ${musicEnabled ? '开' : '关'}`;
+    }
+
+    updateLanguageDisplay() {
+        const currentLang = localStorage.getItem('language') || 'zh';
+        const langNames = {
+            'zh': '中文',
+            'en': 'English',
+            'ja': '日本語'
+        };
+        document.querySelector('.language').textContent = langNames[currentLang];
+    }
 }
 
 window.GameManager = GameManager; 
