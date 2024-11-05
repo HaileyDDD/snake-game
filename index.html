@@ -148,6 +148,101 @@
             margin: 0 auto;
             display: block;
         }
+
+        .game-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            margin-right: 10px;
+        }
+
+        .game-icon.tetris {
+            background: linear-gradient(135deg, #ff6b6b, #ee5253);
+        }
+
+        .game-icon.puzzle {
+            background: linear-gradient(135deg, #4834d4, #686de0);
+        }
+
+        .game-icon.adventure {
+            background: linear-gradient(135deg, #6ab04c, #badc58);
+        }
+
+        /* 改进游戏信息显示 */
+        .game-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            text-align: center;
+        }
+
+        .game-info div {
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* 改进排行榜样式 */
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        .leaderboard-item:hover {
+            transform: translateX(5px);
+            background: #f1f3f5;
+        }
+
+        .leaderboard-item .rank {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+            width: 30px;
+        }
+
+        .leaderboard-item .name {
+            flex: 1;
+            margin: 0 10px;
+        }
+
+        .leaderboard-item .score {
+            font-weight: bold;
+            color: #f39c12;
+        }
+
+        /* 添加响应式布局 */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 200px 1fr 200px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .games-sidebar, .leaderboard {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -156,11 +251,11 @@
         <div class="games-sidebar">
             <h3>更多游戏</h3>
             <div class="game-list-item">
-                <img src="tetris.jpg" alt="俄罗斯方块">
+                <div class="game-icon tetris">T</div>
                 <span>经典俄罗斯方块</span>
             </div>
             <div class="game-list-item">
-                <img src="2048.jpg" alt="2048">
+                <div class="game-icon puzzle">2048</div>
                 <span>2048数字游戏</span>
             </div>
             <!-- 更多游戏项目 -->
@@ -191,11 +286,11 @@
             <!-- 底部游戏推荐 -->
             <div class="more-games">
                 <div class="more-game-item">
-                    <img src="game1.jpg" alt="游戏1">
+                    <div class="game-icon puzzle">P</div>
                     <h4>趣味消除</h4>
                 </div>
                 <div class="more-game-item">
-                    <img src="game2.jpg" alt="游戏2">
+                    <div class="game-icon adventure">A</div>
                     <h4>跳跃冒险</h4>
                 </div>
                 <!-- 更多游戏推荐 -->
