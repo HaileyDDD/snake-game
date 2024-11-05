@@ -215,22 +215,153 @@ class Game {
     draw() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
+        // 绘制网格背景
+        this.drawGrid();
+        
         // 绘制蛇
         this.snake.forEach((segment, index) => {
-            if (this.isPoweredUp) {
-                // 变身状态下的发光效果
-                this.ctx.shadowBlur = 20;
-                this.ctx.shadowColor = '#FFD700';
-                this.ctx.fillStyle = '#FFD700';
+            if (index === 0) {
+                // 蛇头
+                this.drawSnakeHead(segment);
             } else {
-                this.ctx.shadowBlur = 0;
-                this.ctx.fillStyle = '#00FF00';
+                // 蛇身
+                this.drawSnakeBody(segment, index);
             }
-            
-            this.ctx.fillRect(segment.x * 20, segment.y * 20, 18, 18);
         });
         
-        // 绘制食物和障碍物...
+        // 绘制食物
+        this.drawFood();
+        
+        // 绘制特效
+        if (this.isPoweredUp) {
+            this.drawPowerUpEffect();
+        }
+    }
+
+    drawGrid() {
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        this.ctx.lineWidth = 0.5;
+        
+        for (let i = 0; i <= this.canvas.width; i += 20) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(i, 0);
+            this.ctx.lineTo(i, this.canvas.height);
+            this.ctx.stroke();
+        }
+        
+        for (let i = 0; i <= this.canvas.height; i += 20) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, i);
+            this.ctx.lineTo(this.canvas.width, i);
+            this.ctx.stroke();
+        }
+    }
+
+    drawSnakeHead(head) {
+        const x = head.x * 20;
+        const y = head.y * 20;
+        
+        // 基础头部
+        this.ctx.fillStyle = this.isPoweredUp ? '#FFD700' : '#4CAF50';
+        this.ctx.beginPath();
+        this.ctx.arc(x + 10, y + 10, 9, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 眼睛
+        this.ctx.fillStyle = 'white';
+        switch(this.direction) {
+            case 'right':
+                this.ctx.fillRect(x + 12, y + 6, 4, 4);
+                this.ctx.fillRect(x + 12, y + 12, 4, 4);
+                break;
+            case 'left':
+                this.ctx.fillRect(x + 4, y + 6, 4, 4);
+                this.ctx.fillRect(x + 4, y + 12, 4, 4);
+                break;
+            case 'up':
+                this.ctx.fillRect(x + 6, y + 4, 4, 4);
+                this.ctx.fillRect(x + 12, y + 4, 4, 4);
+                break;
+            case 'down':
+                this.ctx.fillRect(x + 6, y + 12, 4, 4);
+                this.ctx.fillRect(x + 12, y + 12, 4, 4);
+                break;
+        }
+    }
+
+    drawSnakeBody(segment, index) {
+        const x = segment.x * 20;
+        const y = segment.y * 20;
+        
+        // 渐变色蛇身
+        const gradient = this.ctx.createRadialGradient(
+            x + 10, y + 10, 0,
+            x + 10, y + 10, 10
+        );
+        
+        if (this.isPoweredUp) {
+            gradient.addColorStop(0, '#FFD700');
+            gradient.addColorStop(1, '#FFA500');
+        } else {
+            gradient.addColorStop(0, '#4CAF50');
+            gradient.addColorStop(1, '#388E3C');
+        }
+        
+        this.ctx.fillStyle = gradient;
+        this.ctx.beginPath();
+        this.ctx.arc(x + 10, y + 10, 8, 0, Math.PI * 2);
+        this.ctx.fill();
+    }
+
+    drawFood() {
+        const x = this.food.x * 20;
+        const y = this.food.y * 20;
+        
+        // 苹果形状
+        this.ctx.fillStyle = '#ff0000';
+        this.ctx.beginPath();
+        this.ctx.arc(x + 10, y + 12, 8, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 苹果茎
+        this.ctx.fillStyle = '#795548';
+        this.ctx.fillRect(x + 9, y + 4, 2, 4);
+        
+        // 叶子
+        this.ctx.fillStyle = '#4CAF50';
+        this.ctx.beginPath();
+        this.ctx.ellipse(x + 12, y + 5, 4, 2, Math.PI / 4, 0, Math.PI * 2);
+        this.ctx.fill();
+    }
+
+    drawPowerUpEffect() {
+        // 发光效果
+        this.ctx.shadowBlur = 20;
+        this.ctx.shadowColor = '#FFD700';
+        
+        // 粒子效果
+        this.snake.forEach(segment => {
+            const x = segment.x * 20;
+            const y = segment.y * 20;
+            
+            for (let i = 0; i < 3; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * 10;
+                
+                this.ctx.fillStyle = 'rgba(255, 215, 0, 0.5)';
+                this.ctx.beginPath();
+                this.ctx.arc(
+                    x + 10 + Math.cos(angle) * radius,
+                    y + 10 + Math.sin(angle) * radius,
+                    2,
+                    0,
+                    Math.PI * 2
+                );
+                this.ctx.fill();
+            }
+        });
+        
+        this.ctx.shadowBlur = 0;
     }
 
     loadLevel(levelConfig) {
