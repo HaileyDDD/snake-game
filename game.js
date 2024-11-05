@@ -41,10 +41,14 @@ class Game {
     setupEventListeners() {
         // 键盘控制
         document.addEventListener('keydown', (e) => {
-            // 如果游戏正在进行，阻止默认的滚动行为
-            if (this.gameLoop) {
+            // 检查是否是方向键
+            const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+            
+            // 只有在游戏进行中且按下方向键时才阻止默认行为
+            if (this.gameLoop && arrowKeys.includes(e.key)) {
                 e.preventDefault(); // 阻止页面滚动
             }
+            
             this.handleKeyPress(e);
         });
         
@@ -111,6 +115,9 @@ class Game {
     }
 
     handleKeyPress(e) {
+        // 只有在游戏进行中才处理方向键
+        if (!this.gameLoop) return;
+
         const keys = {
             'ArrowUp': 'up',
             'ArrowDown': 'down',
@@ -203,7 +210,7 @@ class Game {
     deactivatePowerUp() {
         this.isPoweredUp = false;
         this.speed = this.originalSpeed;
-        this.showNotification('��敌模式结束！', 'power-down');
+        this.showNotification('敌模式结束！', 'power-down');
         this.playSound('powerDown');
     }
 
@@ -248,7 +255,7 @@ class Game {
         // 绘制食物
         this.drawFood();
         
-        // 绘制特���
+        // 绘制特
         if (this.isPoweredUp) {
             this.drawPowerUpEffect();
         }
@@ -478,6 +485,7 @@ class Game {
 
         const head = {...this.snake[0]};
         
+        // 更新头部位置
         switch(this.direction) {
             case 'up': head.y--; break;
             case 'down': head.y++; break;
@@ -485,8 +493,20 @@ class Game {
             case 'right': head.x++; break;
         }
 
-        // 检查碰撞
-        if (!this.isPoweredUp && this.checkCollision(head)) {
+        // 检查边界碰撞
+        if (this.checkBoundaryCollision(head)) {
+            if (!this.isPoweredUp) {
+                this.gameOver();
+                return;
+            } else {
+                // 变身状态下穿墙
+                head.x = (head.x + this.canvas.width / 20) % (this.canvas.width / 20);
+                head.y = (head.y + this.canvas.height / 20) % (this.canvas.height / 20);
+            }
+        }
+
+        // 检查其他碰撞（自身和障碍物）
+        if (!this.isPoweredUp && this.checkOtherCollisions(head)) {
             this.gameOver();
             return;
         }
@@ -501,17 +521,26 @@ class Game {
         this.snake.unshift(head);
     }
 
-    checkCollision(head) {
-        // 检查墙壁碰撞
-        if (head.x < 0 || head.x >= this.canvas.width / 20 ||
-            head.y < 0 || head.y >= this.canvas.height / 20) {
-            return true;
-        }
+    checkBoundaryCollision(head) {
+        return head.x < 0 || 
+               head.x >= this.canvas.width / 20 || 
+               head.y < 0 || 
+               head.y >= this.canvas.height / 20;
+    }
 
+    checkOtherCollisions(head) {
         // 检查自身碰撞
-        return this.snake.some(segment => 
+        const selfCollision = this.snake.some(segment => 
             segment.x === head.x && segment.y === head.y
         );
+
+        // 检查障碍物碰撞
+        const obstacleCollision = this.obstacles.some(obs => 
+            head.x >= obs.x && head.x < obs.x + obs.width &&
+            head.y >= obs.y && head.y < obs.y + obs.height
+        );
+
+        return selfCollision || obstacleCollision;
     }
 
     startGame() {
