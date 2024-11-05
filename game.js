@@ -18,6 +18,19 @@ class Game {
         this.levelManager = new LevelManager();
     }
 
+    init() {
+        console.log('Initializing game...');
+        this.canvas = document.getElementById('gameCanvas');
+        if (!this.canvas) {
+            console.error('Canvas element not found');
+            return;
+        }
+        this.ctx = this.canvas.getContext('2d');
+        this.resetGame();
+        this.setupEventListeners();
+        console.log('Game initialized successfully');
+    }
+
     setupEventListeners() {
         // 键盘控制
         document.addEventListener('keydown', (e) => this.handleKeyPress(e));
@@ -47,19 +60,6 @@ class Game {
                 this.speed = 200 - (e.target.value * 15);
             });
         }
-    }
-
-    init() {
-        console.log('Initializing game...');
-        this.canvas = document.getElementById('gameCanvas');
-        if (!this.canvas) {
-            console.error('Canvas element not found');
-            return;
-        }
-        this.ctx = this.canvas.getContext('2d');
-        this.resetGame();
-        this.setupEventListeners();
-        console.log('Game initialized successfully');
     }
 
     resetGame() {
@@ -295,3 +295,6 @@ class Game {
         document.getElementById('startBtn').textContent = '重新开始';
     }
 }
+
+// 确保在全局范围内可访问
+window.Game = Game;
