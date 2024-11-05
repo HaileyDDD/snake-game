@@ -11,7 +11,7 @@ class GameManager {
             this.initializeEventListeners();
             this.loadHighScore();
         } catch (error) {
-            console.error('Error during initialization:', error);
+            console.error('Game initialization error:', error);
         }
     }
 

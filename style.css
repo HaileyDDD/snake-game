@@ -262,4 +262,26 @@ canvas {
     .social-share {
         flex-direction: column;
     }
+}
+
+/* 优化动画性能 */
+.game-card, .nav-button, .share-button {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* 添加平滑滚动 */
+html {
+    scroll-behavior: smooth;
+}
+
+/* 优化移动端性能 */
+@media (max-width: 768px) {
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .game-card, .nav-button, .share-button {
+        will-change: auto;
+    }
 } 

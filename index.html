@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Permissions-Policy" content="gyroscope=(), accelerometer=()">
+    <meta http-equiv="Permissions-Policy" content="gyroscope=(), accelerometer=(), interest-cohort=()">
     <title>超级贪吃蛇 - 经典小游戏</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -109,6 +109,26 @@
         document.documentElement.style.visibility = 'hidden';
         window.addEventListener('DOMContentLoaded', function() {
             document.documentElement.style.visibility = '';
+        });
+
+        window.addEventListener('error', function(e) {
+            // 忽略特定的错误
+            if (e.message.includes('postMessage') || 
+                e.message.includes('Permissions policy')) {
+                e.preventDefault();
+                return;
+            }
+            console.error('Game Error:', e);
+        });
+
+        // 初始化游戏
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                window.gameManager = new GameManager();
+                window.gameManager.init();
+            } catch (error) {
+                console.error('Game initialization failed:', error);
+            }
         });
     </script>
 </body>
