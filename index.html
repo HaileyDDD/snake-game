@@ -427,22 +427,12 @@
     <script src="themes.js"></script>
     <script src="gameManager.js"></script>
     <script>
-        let gameManager;
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             try {
-                // 确保所有必要的类都已加载
-                if (typeof ThemeManager === 'undefined') {
-                    console.error('ThemeManager class is not loaded');
-                    return;
-                }
-                if (typeof SnakeGame === 'undefined') {
-                    console.error('SnakeGame class is not loaded');
-                    return;
-                }
-                
                 console.log('Initializing game manager...');
                 gameManager = new GameManager();
                 window.gameManager = gameManager;
+                gameManager.init();
                 console.log('Game manager initialized successfully');
             } catch (error) {
                 console.error('Error initializing game:', error);

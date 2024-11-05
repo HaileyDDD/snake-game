@@ -1,20 +1,116 @@
 class Game {
     constructor() {
+        this.canvas = null;
+        this.ctx = null;
+        this.snake = [];
+        this.food = null;
+        this.direction = 'right';
+        this.score = 0;
+        this.gameLoop = null;
+        this.isPaused = false;
         this.levelManager = new LevelManager();
         this.isPoweredUp = false;
         this.foodEatenCount = 0;
-        this.powerUpDuration = 10000; // 10秒变身时间
+        this.powerUpDuration = 10000;
         this.powerUpTimer = null;
-        this.snake = null;
-        this.canvas = null;
-        this.ctx = null;
     }
 
     init() {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
-        this.loadLevel(this.levelManager.getCurrentLevel());
+        
+        // 初始化蛇的位置
+        this.snake = [
+            {x: 10, y: 10},
+            {x: 9, y: 10},
+            {x: 8, y: 10}
+        ];
+        
+        // 生成第一个食物
+        this.spawnFood();
+        
+        // 设置事件监听
         this.setupEventListeners();
+        
+        // 加载第一关
+        this.loadLevel(this.levelManager.getCurrentLevel());
+        
+        console.log('Game initialized successfully');
+    }
+
+    setupEventListeners() {
+        document.addEventListener('keydown', (e) => this.handleKeyPress(e));
+        document.getElementById('startBtn').addEventListener('click', () => this.startGame());
+        document.getElementById('pauseBtn').addEventListener('click', () => this.togglePause());
+    }
+
+    startGame() {
+        if (this.gameLoop) return;
+        
+        this.isPaused = false;
+        this.gameLoop = setInterval(() => {
+            this.update();
+            this.draw();
+        }, this.speed);
+        
+        document.getElementById('startBtn').textContent = '重新开始';
+    }
+
+    update() {
+        if (this.isPaused) return;
+
+        // 移动蛇
+        const head = {x: this.snake[0].x, y: this.snake[0].y};
+        
+        switch(this.direction) {
+            case 'up': head.y--; break;
+            case 'down': head.y++; break;
+            case 'left': head.x--; break;
+            case 'right': head.x++; break;
+        }
+
+        // 检查碰撞
+        if (!this.isPoweredUp && this.checkCollision(head)) {
+            this.gameOver();
+            return;
+        }
+
+        // 检查是否吃到食物
+        if (head.x === this.food.x && head.y === this.food.y) {
+            this.handleFoodCollision();
+        } else {
+            this.snake.pop();
+        }
+
+        this.snake.unshift(head);
+    }
+
+    draw() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // 绘制蛇
+        this.snake.forEach((segment, index) => {
+            this.ctx.fillStyle = this.isPoweredUp ? '#FFD700' : '#00FF00';
+            if (this.isPoweredUp) {
+                this.ctx.shadowBlur = 20;
+                this.ctx.shadowColor = '#FFD700';
+            }
+            this.ctx.fillRect(segment.x * 20, segment.y * 20, 18, 18);
+            this.ctx.shadowBlur = 0;
+        });
+
+        // 绘制食物
+        this.ctx.fillStyle = '#FF0000';
+        this.ctx.fillRect(this.food.x * 20, this.food.y * 20, 18, 18);
+
+        // 绘制障碍物
+        if (this.obstacles) {
+            this.ctx.fillStyle = '#666666';
+            this.obstacles.forEach(obstacle => {
+                this.ctx.fillRect(obstacle.x * 20, obstacle.y * 20, 
+                                obstacle.width * 20, obstacle.height * 20);
+            });
+        }
     }
 
     loadLevel(levelConfig) {
@@ -115,22 +211,6 @@ class Game {
             powerdown: 'path/to/powerdown-sound.mp3'
         };
         // TODO: 实现音效播放
-    }
-
-    draw() {
-        // 清空画布
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        // 绘制蛇
-        if (this.isPoweredUp) {
-            // 绘制发光效果
-            this.ctx.shadowBlur = 20;
-            this.ctx.shadowColor = '#FFD700';
-        } else {
-            this.ctx.shadowBlur = 0;
-        }
-        
-        // 绘制其他游戏元素...
     }
 
     showNotification(message, type) {
