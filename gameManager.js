@@ -6,32 +6,45 @@ class GameManager {
 
     init() {
         console.log('Initializing game manager...');
-        this.initializeEventListeners();
         this.game = new Game();
         this.game.init();
+        this.initializeEventListeners();
+        this.showMenu('main');
         console.log('Game manager initialized successfully');
     }
 
     initializeEventListeners() {
-        document.getElementById('levelSelectBtn').addEventListener('click', () => {
-            this.showMenu('levelSelect');
-            this.initializeLevelSelect();
-        });
+        const levelSelectBtn = document.getElementById('levelSelectBtn');
+        const helpBtn = document.getElementById('helpBtn');
+        const backBtns = document.querySelectorAll('.menu-button[onclick*="handleBackButton"]');
 
-        document.getElementById('helpBtn').addEventListener('click', () => {
-            this.hideAllMenus();
-            this.showGameContainer();
-        });
+        if (levelSelectBtn) {
+            levelSelectBtn.onclick = () => {
+                this.showMenu('levelSelect');
+                this.initializeLevelSelect();
+            };
+        }
 
-        document.querySelectorAll('[onclick="gameManager.handleBackButton()"]').forEach(button => {
-            button.onclick = () => this.handleBackButton();
+        if (helpBtn) {
+            helpBtn.onclick = () => {
+                this.hideAllMenus();
+                this.showGameContainer();
+            };
+        }
+
+        backBtns.forEach(btn => {
+            btn.onclick = () => this.handleBackButton();
         });
     }
 
     showMenu(menuId) {
+        console.log('Showing menu:', menuId);
         this.hideAllMenus();
-        document.getElementById(menuId + 'Menu').style.display = 'flex';
-        this.currentMenu = menuId;
+        const menu = document.getElementById(menuId + 'Menu');
+        if (menu) {
+            menu.style.display = 'flex';
+            this.currentMenu = menuId;
+        }
     }
 
     hideAllMenus() {
@@ -86,9 +99,4 @@ class GameManager {
     }
 }
 
-// 初始化游戏管理器
-window.addEventListener('DOMContentLoaded', () => {
-    const gameManager = new GameManager();
-    gameManager.init();
-    window.gameManager = gameManager;
-}); 
+window.GameManager = GameManager; 
