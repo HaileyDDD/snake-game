@@ -3,30 +3,36 @@ class LevelManager {
         this.levels = [
             {
                 id: 1,
-                name: "挑战模式",
-                speed: 100,
+                name: "彩虹之路",
+                speed: 100,  // 较快的基础速度
                 foodCount: 3,
-                powerUpThreshold: 3,
-                obstacles: [
-                    {x: 5, y: 5, width: 2, height: 2},
-                    {x: 15, y: 15, width: 2, height: 2}
-                ],
-                target: 200,
-                description: "收集食物并躲避障碍物，吃够3个食物可以变身！变身后无敌且加速！"
+                powerUpThreshold: 3,  // 吃3个食物可以变身
+                obstacles: [], // 第一关无障碍，让玩家适应速度
+                target: 100,  // 提高基础分数要求
+                description: "初始关卡 - 穿墙模式",
+                specialFeatures: {
+                    wallPass: true,  // 允许穿墙
+                    speedBoost: true // 变身后速度提升
+                }
             },
             {
                 id: 2,
-                name: "地狱模式",
-                speed: 80,
+                name: "魔法森林",
+                speed: 80,   // 极速模式
                 foodCount: 4,
-                powerUpThreshold: 4,
+                powerUpThreshold: 4,  // 吃4个食物可以变身
                 obstacles: [
-                    {x: 5, y: 5, width: 10, height: 2},
-                    {x: 5, y: 13, width: 10, height: 2},
-                    {x: 13, y: 5, width: 2, height: 10}
+                    // 十字形障碍
+                    {x: 10, y: 5, width: 2, height: 10},  // 竖线
+                    {x: 5, y: 10, width: 10, height: 2}   // 横线
                 ],
-                target: 500,
-                description: "极速挑战！迷宫式障碍！吃够4个食物变身！"
+                target: 150,
+                description: "使用魔法门快速移动，躲避魔法生物",
+                specialFeatures: {
+                    wallPass: false,     // 不能穿墙
+                    speedBoost: true,    // 变身后速度提升
+                    magicPortals: true   // 特殊的传送门机制
+                }
             }
         ];
         this.currentLevel = 1;
