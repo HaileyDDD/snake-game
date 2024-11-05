@@ -8,19 +8,54 @@ class Game {
         this.score = 0;
         this.gameLoop = null;
         this.isPaused = false;
-        this.speed = 120; // 默认速度
+        this.speed = 120;
         this.obstacles = [];
         this.isPoweredUp = false;
         this.foodEatenCount = 0;
-        this.powerUpDuration = 10000; // 变身持续10秒
+        this.powerUpDuration = 10000;
         this.powerUpTimer = null;
         this.originalSpeed = null;
         this.levelManager = new LevelManager();
     }
 
+    setupEventListeners() {
+        // 键盘控制
+        document.addEventListener('keydown', (e) => this.handleKeyPress(e));
+        
+        // 游戏控制按钮
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const speedSlider = document.getElementById('speedSlider');
+        
+        if (startBtn) {
+            startBtn.addEventListener('click', () => {
+                if (!this.gameLoop) {
+                    this.startGame();
+                } else {
+                    this.resetGame();
+                    this.startGame();
+                }
+            });
+        }
+        
+        if (pauseBtn) {
+            pauseBtn.addEventListener('click', () => this.togglePause());
+        }
+        
+        if (speedSlider) {
+            speedSlider.addEventListener('input', (e) => {
+                this.speed = 200 - (e.target.value * 15);
+            });
+        }
+    }
+
     init() {
         console.log('Initializing game...');
         this.canvas = document.getElementById('gameCanvas');
+        if (!this.canvas) {
+            console.error('Canvas element not found');
+            return;
+        }
         this.ctx = this.canvas.getContext('2d');
         this.resetGame();
         this.setupEventListeners();
@@ -193,35 +228,57 @@ class Game {
         // 绘制食物和障碍物...
     }
 
-    setupEventListeners() {
-        // 键盘控制
-        document.addEventListener('keydown', (e) => this.handleKeyPress(e));
+    loadLevel(levelConfig) {
+        if (!levelConfig) return;
         
-        // 游戏控制按钮
-        const startBtn = document.getElementById('startBtn');
-        const pauseBtn = document.getElementById('pauseBtn');
-        const speedSlider = document.getElementById('speedSlider');
+        this.speed = levelConfig.speed;
+        this.obstacles = levelConfig.obstacles || [];
+        document.getElementById('level').textContent = levelConfig.id;
+        document.getElementById('levelGoal').textContent = 
+            `目标分数: ${levelConfig.target}\n${levelConfig.description}`;
         
-        if (startBtn) {
-            startBtn.addEventListener('click', () => {
-                if (!this.gameLoop) {
-                    this.startGame();
-                } else {
-                    this.resetGame();
-                    this.startGame();
-                }
-            });
+        this.resetGame();
+    }
+
+    update() {
+        if (this.isPaused) return;
+
+        const head = {...this.snake[0]};
+        
+        switch(this.direction) {
+            case 'up': head.y--; break;
+            case 'down': head.y++; break;
+            case 'left': head.x--; break;
+            case 'right': head.x++; break;
         }
-        
-        if (pauseBtn) {
-            pauseBtn.addEventListener('click', () => this.togglePause());
+
+        // 检查碰撞
+        if (!this.isPoweredUp && this.checkCollision(head)) {
+            this.gameOver();
+            return;
         }
-        
-        if (speedSlider) {
-            speedSlider.addEventListener('input', (e) => {
-                this.speed = 200 - (e.target.value * 15); // 速度范围：50-185ms
-            });
+
+        // 检查是否吃到食物
+        if (head.x === this.food.x && head.y === this.food.y) {
+            this.handleFoodCollision();
+        } else {
+            this.snake.pop();
         }
+
+        this.snake.unshift(head);
+    }
+
+    checkCollision(head) {
+        // 检查墙壁碰撞
+        if (head.x < 0 || head.x >= this.canvas.width / 20 ||
+            head.y < 0 || head.y >= this.canvas.height / 20) {
+            return true;
+        }
+
+        // 检查自身碰撞
+        return this.snake.some(segment => 
+            segment.x === head.x && segment.y === head.y
+        );
     }
 
     startGame() {
