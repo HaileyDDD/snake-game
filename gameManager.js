@@ -2,6 +2,7 @@ class GameManager {
     constructor() {
         this.game = null;
         this.leaderboardData = [];
+        this.isGameActive = false;
     }
 
     init() {
@@ -10,6 +11,7 @@ class GameManager {
             this.game.init();
             this.initializeEventListeners();
             this.loadHighScore();
+            this.setupKeyboardControls();
         } catch (error) {
             console.error('Game initialization error:', error);
         }
@@ -140,7 +142,26 @@ class GameManager {
         document.querySelector('.language').textContent = langNames[currentLang];
     }
 
+    setupKeyboardControls() {
+        // 添加全局键盘事件监听
+        window.addEventListener('keydown', (e) => {
+            // 游戏进行时阻止方向键的默认行为
+            if (this.isGameActive) {
+                const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '];
+                if (arrowKeys.includes(e.key)) {
+                    e.preventDefault();
+                }
+            }
+        }, false);
+
+        // 监听游戏状态变化
+        document.getElementById('startBtn').addEventListener('click', () => {
+            this.isGameActive = true;
+        });
+    }
+
     gameOver() {
+        this.isGameActive = false;
         clearInterval(this.gameLoop);
         this.gameLoop = null;
         

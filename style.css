@@ -418,4 +418,29 @@ html {
     body {
         background: linear-gradient(-45deg, #0a0a1a, #06111e, #0b1426, #0f1927);
     }
+}
+
+.game-status {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 18px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.game-status.visible {
+    opacity: 1;
+}
+
+/* 确保游戏区域在游戏进行时不会滚动 */
+.game-container.active {
+    touch-action: none;
+    user-select: none;
 } 

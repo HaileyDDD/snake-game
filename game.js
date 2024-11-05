@@ -151,9 +151,14 @@ class Game {
         clearInterval(this.gameLoop);
         this.gameLoop = null;
         
-        // 添加到排行榜
         if (window.gameManager) {
-            window.gameManager.addScoreToLeaderboard(this.score);
+            window.gameManager.isGameActive = false;
+        }
+        
+        // 更新最高分
+        const currentHighScore = localStorage.getItem('highScore') || 0;
+        if (this.score > currentHighScore) {
+            localStorage.setItem('highScore', this.score);
         }
         
         this.resetGame();
@@ -165,6 +170,10 @@ class Game {
         this.isPaused = !this.isPaused;
         document.getElementById('pauseBtn').textContent = 
             this.isPaused ? '继续' : '暂停';
+        
+        if (window.gameManager) {
+            window.gameManager.isGameActive = !this.isPaused;
+        }
     }
 
     handleFoodCollision() {
@@ -544,7 +553,9 @@ class Game {
     }
 
     startGame() {
-        if (this.gameLoop) return;
+        if (this.gameLoop) {
+            clearInterval(this.gameLoop);
+        }
         
         this.isPaused = false;
         this.gameLoop = setInterval(() => {
@@ -555,6 +566,9 @@ class Game {
         }, this.speed);
         
         document.getElementById('startBtn').textContent = '重新开始';
+        if (window.gameManager) {
+            window.gameManager.isGameActive = true;
+        }
     }
 
     playSound(soundName) {
