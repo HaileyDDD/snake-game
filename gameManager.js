@@ -12,6 +12,7 @@ class GameManager {
             this.initializeEventListeners();
             this.initializeLeaderboard();
             this.loadHighScore();
+            this.updateRatingDisplay();
             console.log('Game manager initialized successfully');
         } catch (error) {
             console.error('Error during initialization:', error);
@@ -111,13 +112,16 @@ class GameManager {
     }
 
     // 添加评分功能
-    rateGame(stars) {
+    rateGame(type) {
         try {
-            const ratings = JSON.parse(localStorage.getItem('gameRatings') || '[]');
-            ratings.push({
-                stars: stars,
-                date: new Date().toISOString()
-            });
+            const ratings = JSON.parse(localStorage.getItem('gameRatings') || '{"likes": 0, "dislikes": 0}');
+            
+            if (type === 'like') {
+                ratings.likes++;
+            } else if (type === 'dislike') {
+                ratings.dislikes++;
+            }
+            
             localStorage.setItem('gameRatings', JSON.stringify(ratings));
             this.updateRatingDisplay();
         } catch (error) {
@@ -127,16 +131,12 @@ class GameManager {
 
     // 更新评分显示
     updateRatingDisplay() {
-        const ratings = JSON.parse(localStorage.getItem('gameRatings') || '[]');
-        if (ratings.length === 0) return;
-        
-        const avgRating = ratings.reduce((sum, r) => sum + r.stars, 0) / ratings.length;
-        const starsElement = document.querySelector('.stars');
-        if (starsElement) {
-            starsElement.textContent = '★'.repeat(Math.round(avgRating)) + 
-                                     '☆'.repeat(5 - Math.round(avgRating));
-            document.querySelector('.rating-section p').textContent = 
-                `${avgRating.toFixed(1)} / 5 (基于${ratings.length}个评价)`;
+        try {
+            const ratings = JSON.parse(localStorage.getItem('gameRatings') || '{"likes": 0, "dislikes": 0}');
+            document.getElementById('likeCount').textContent = ratings.likes;
+            document.getElementById('dislikeCount').textContent = ratings.dislikes;
+        } catch (error) {
+            console.error('Error updating ratings:', error);
         }
     }
 
