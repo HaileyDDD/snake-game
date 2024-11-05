@@ -16,6 +16,13 @@ class Game {
         this.powerUpTimer = null;
         this.originalSpeed = null;
         this.levelManager = new LevelManager();
+        this.sounds = {
+            eat: new Audio('sounds/eat.mp3'),
+            powerUp: new Audio('sounds/powerup.mp3'),
+            powerDown: new Audio('sounds/powerdown.mp3'),
+            gameOver: new Audio('sounds/gameover.mp3')
+        };
+        this.isSoundEnabled = true;
     }
 
     init() {
@@ -33,7 +40,13 @@ class Game {
 
     setupEventListeners() {
         // 键盘控制
-        document.addEventListener('keydown', (e) => this.handleKeyPress(e));
+        document.addEventListener('keydown', (e) => {
+            // 如果游戏正在进行，阻止默认的滚动行为
+            if (this.gameLoop) {
+                e.preventDefault(); // 阻止页面滚动
+            }
+            this.handleKeyPress(e);
+        });
         
         // 游戏控制按钮
         const startBtn = document.getElementById('startBtn');
@@ -138,6 +151,7 @@ class Game {
         
         this.resetGame();
         document.getElementById('startBtn').textContent = '开始游戏';
+        this.playSound('gameOver');
     }
 
     togglePause() {
@@ -183,12 +197,14 @@ class Game {
         // 设置变身持续时间
         if (this.powerUpTimer) clearTimeout(this.powerUpTimer);
         this.powerUpTimer = setTimeout(() => this.deactivatePowerUp(), this.powerUpDuration);
+        this.playSound('powerUp');
     }
 
     deactivatePowerUp() {
         this.isPoweredUp = false;
         this.speed = this.originalSpeed;
-        this.showNotification('无敌模式结束！', 'power-down');
+        this.showNotification('��敌模式结束！', 'power-down');
+        this.playSound('powerDown');
     }
 
     showScoreAnimation(text, x, y) {
@@ -232,7 +248,7 @@ class Game {
         // 绘制食物
         this.drawFood();
         
-        // 绘制特效
+        // 绘制特���
         if (this.isPoweredUp) {
             this.drawPowerUpEffect();
         }
@@ -261,32 +277,113 @@ class Game {
         const x = head.x * 20;
         const y = head.y * 20;
         
-        // 基础头部
-        this.ctx.fillStyle = this.isPoweredUp ? '#FFD700' : '#4CAF50';
+        // 添加发光效果
+        if (this.isPoweredUp) {
+            this.ctx.shadowBlur = 15;
+            this.ctx.shadowColor = '#FFD700';
+        }
+        
+        // 蛇头渐变
+        const gradient = this.ctx.createRadialGradient(
+            x + 10, y + 10, 0,
+            x + 10, y + 10, 10
+        );
+        
+        if (this.isPoweredUp) {
+            gradient.addColorStop(0, '#FFD700');
+            gradient.addColorStop(1, '#FFA500');
+        } else {
+            gradient.addColorStop(0, '#4CAF50');
+            gradient.addColorStop(1, '#388E3C');
+        }
+        
+        // 绘制蛇头
+        this.ctx.fillStyle = gradient;
         this.ctx.beginPath();
         this.ctx.arc(x + 10, y + 10, 9, 0, Math.PI * 2);
         this.ctx.fill();
         
-        // 眼睛
+        // 眼睛和舌头
+        this.drawSnakeEyes(x, y);
+        this.drawSnakeTongue(x, y);
+        
+        this.ctx.shadowBlur = 0;
+    }
+
+    drawSnakeEyes(x, y) {
+        // 眼睛白色部分
         this.ctx.fillStyle = 'white';
-        switch(this.direction) {
-            case 'right':
-                this.ctx.fillRect(x + 12, y + 6, 4, 4);
-                this.ctx.fillRect(x + 12, y + 12, 4, 4);
-                break;
-            case 'left':
-                this.ctx.fillRect(x + 4, y + 6, 4, 4);
-                this.ctx.fillRect(x + 4, y + 12, 4, 4);
-                break;
-            case 'up':
-                this.ctx.fillRect(x + 6, y + 4, 4, 4);
-                this.ctx.fillRect(x + 12, y + 4, 4, 4);
-                break;
-            case 'down':
-                this.ctx.fillRect(x + 6, y + 12, 4, 4);
-                this.ctx.fillRect(x + 12, y + 12, 4, 4);
-                break;
-        }
+        const eyePositions = this.getEyePositions(x, y);
+        eyePositions.forEach(pos => {
+            this.ctx.beginPath();
+            this.ctx.arc(pos.x, pos.y, 3, 0, Math.PI * 2);
+            this.ctx.fill();
+            
+            // 眼球
+            this.ctx.fillStyle = 'black';
+            this.ctx.beginPath();
+            this.ctx.arc(pos.x + pos.pupilOffset.x, pos.y + pos.pupilOffset.y, 1.5, 0, Math.PI * 2);
+            this.ctx.fill();
+        });
+    }
+
+    getEyePositions(x, y) {
+        const positions = {
+            'right': [
+                { x: x + 14, y: y + 7, pupilOffset: { x: 1, y: 0 } },
+                { x: x + 14, y: y + 13, pupilOffset: { x: 1, y: 0 } }
+            ],
+            'left': [
+                { x: x + 6, y: y + 7, pupilOffset: { x: -1, y: 0 } },
+                { x: x + 6, y: y + 13, pupilOffset: { x: -1, y: 0 } }
+            ],
+            'up': [
+                { x: x + 7, y: y + 6, pupilOffset: { x: 0, y: -1 } },
+                { x: x + 13, y: y + 6, pupilOffset: { x: 0, y: -1 } }
+            ],
+            'down': [
+                { x: x + 7, y: y + 14, pupilOffset: { x: 0, y: 1 } },
+                { x: x + 13, y: y + 14, pupilOffset: { x: 0, y: 1 } }
+            ]
+        };
+        return positions[this.direction];
+    }
+
+    drawSnakeTongue(x, y) {
+        this.ctx.strokeStyle = '#ff0066';
+        this.ctx.lineWidth = 1;
+        
+        const tongueStart = this.getTongueStart(x, y);
+        const tongueLength = 6;
+        const forkLength = 3;
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(tongueStart.x, tongueStart.y);
+        this.ctx.lineTo(tongueStart.x + tongueLength * tongueStart.dirX, 
+                        tongueStart.y + tongueLength * tongueStart.dirY);
+                        
+        // 分叉
+        const forkX = tongueStart.x + tongueLength * tongueStart.dirX;
+        const forkY = tongueStart.y + tongueLength * tongueStart.dirY;
+        
+        this.ctx.moveTo(forkX, forkY);
+        this.ctx.lineTo(forkX + forkLength * (tongueStart.dirX + 0.5), 
+                        forkY + forkLength * (tongueStart.dirY + 0.5));
+        this.ctx.moveTo(forkX, forkY);
+        this.ctx.lineTo(forkX + forkLength * (tongueStart.dirX - 0.5), 
+                        forkY + forkLength * (tongueStart.dirY - 0.5));
+        
+        this.ctx.stroke();
+    }
+
+    getTongueStart(x, y) {
+        const positions = {
+            'right': { x: x + 18, y: y + 10, dirX: 1, dirY: 0 },
+            'left': { x: x + 2, y: y + 10, dirX: -1, dirY: 0 },
+            'up': { x: x + 10, y: y + 2, dirX: 0, dirY: -1 },
+            'down': { x: x + 10, y: y + 18, dirX: 0, dirY: 1 }
+        };
+        return positions[this.direction];
     }
 
     drawSnakeBody(segment, index) {
@@ -429,6 +526,32 @@ class Game {
         }, this.speed);
         
         document.getElementById('startBtn').textContent = '重新开始';
+    }
+
+    playSound(soundName) {
+        if (this.isSoundEnabled && this.sounds[soundName]) {
+            this.sounds[soundName].currentTime = 0;
+            this.sounds[soundName].play().catch(e => console.log('Sound play failed:', e));
+        }
+    }
+
+    showScoreAnimation(score, x, y) {
+        const scoreText = document.createElement('div');
+        scoreText.className = 'score-popup';
+        scoreText.textContent = `+${score}`;
+        scoreText.style.left = `${x}px`;
+        scoreText.style.top = `${y}px`;
+        document.body.appendChild(scoreText);
+        
+        setTimeout(() => scoreText.remove(), 1000);
+    }
+
+    showPowerUpAnimation() {
+        const flash = document.createElement('div');
+        flash.className = 'power-up-flash';
+        document.body.appendChild(flash);
+        
+        setTimeout(() => flash.remove(), 500);
     }
 }
 
