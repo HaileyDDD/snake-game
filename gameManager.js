@@ -16,34 +16,51 @@ class GameManager {
     initializeEventListeners() {
         const levelSelectBtn = document.getElementById('levelSelectBtn');
         const helpBtn = document.getElementById('helpBtn');
-        const backBtns = document.querySelectorAll('.menu-button[onclick*="handleBackButton"]');
+        const leaderboardBtn = document.getElementById('leaderboardBtn');
+        const backButtons = document.querySelectorAll('.back-button');
 
         if (levelSelectBtn) {
-            levelSelectBtn.onclick = () => {
+            levelSelectBtn.addEventListener('click', () => {
                 this.showMenu('levelSelect');
                 this.initializeLevelSelect();
-            };
+            });
         }
 
         if (helpBtn) {
-            helpBtn.onclick = () => {
+            helpBtn.addEventListener('click', () => {
                 this.hideAllMenus();
                 this.showGameContainer();
-            };
+            });
         }
 
-        backBtns.forEach(btn => {
-            btn.onclick = () => this.handleBackButton();
+        if (leaderboardBtn) {
+            leaderboardBtn.addEventListener('click', () => {
+                this.showMenu('leaderboard');
+            });
+        }
+
+        backButtons.forEach(btn => {
+            btn.addEventListener('click', () => this.handleBackButton());
         });
     }
 
     showMenu(menuId) {
         console.log('Showing menu:', menuId);
         this.hideAllMenus();
-        const menu = document.getElementById(menuId + 'Menu');
-        if (menu) {
-            menu.style.display = 'flex';
+        this.hideGameContainer();
+        
+        let menuElement;
+        if (menuId === 'levelSelect') {
+            menuElement = document.getElementById('levelSelect');
+        } else {
+            menuElement = document.getElementById(menuId + 'Menu');
+        }
+        
+        if (menuElement) {
+            menuElement.style.display = 'flex';
             this.currentMenu = menuId;
+        } else {
+            console.error('Menu not found:', menuId);
         }
     }
 
@@ -51,19 +68,28 @@ class GameManager {
         const menus = ['mainMenu', 'leaderboardMenu', 'levelSelect'];
         menus.forEach(menu => {
             const element = document.getElementById(menu);
-            if (element) element.style.display = 'none';
+            if (element) {
+                element.style.display = 'none';
+            }
         });
     }
 
     showGameContainer() {
-        document.querySelector('.game-container').style.display = 'block';
+        const container = document.querySelector('.game-container');
+        if (container) {
+            container.style.display = 'block';
+        }
     }
 
     hideGameContainer() {
-        document.querySelector('.game-container').style.display = 'none';
+        const container = document.querySelector('.game-container');
+        if (container) {
+            container.style.display = 'none';
+        }
     }
 
     handleBackButton() {
+        console.log('Handling back button, current menu:', this.currentMenu);
         if (this.currentMenu === 'main') {
             return;
         }
@@ -74,6 +100,11 @@ class GameManager {
     initializeLevelSelect() {
         console.log('Initializing level select');
         const levelList = document.getElementById('levelList');
+        if (!levelList) {
+            console.error('Level list element not found');
+            return;
+        }
+
         levelList.innerHTML = '';
         
         this.game.levelManager.levels.forEach(level => {
@@ -84,7 +115,7 @@ class GameManager {
                 <p>${level.description}</p>
                 <p>目标分数: ${level.target}</p>
             `;
-            button.onclick = () => this.startLevel(level.id);
+            button.addEventListener('click', () => this.startLevel(level.id));
             levelList.appendChild(button);
         });
     }
