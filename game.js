@@ -130,7 +130,12 @@ class Game {
     gameOver() {
         clearInterval(this.gameLoop);
         this.gameLoop = null;
-        alert(`游戏结束！得分：${this.score}`);
+        
+        // 添加到排行榜
+        if (window.gameManager) {
+            window.gameManager.addScoreToLeaderboard(this.score);
+        }
+        
         this.resetGame();
         document.getElementById('startBtn').textContent = '开始游戏';
     }
