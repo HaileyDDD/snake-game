@@ -5,15 +5,11 @@ class GameManager {
     }
 
     init() {
-        console.log('Initializing game manager...');
         try {
             this.game = new Game();
             this.game.init();
             this.initializeEventListeners();
-            this.initializeLeaderboard();
             this.loadHighScore();
-            this.updateRatingDisplay();
-            console.log('Game manager initialized successfully');
         } catch (error) {
             console.error('Error during initialization:', error);
         }
