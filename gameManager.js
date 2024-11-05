@@ -1,67 +1,49 @@
 class GameManager {
     constructor() {
         this.game = null;
-        this.themeManager = null;
-        this.currentMenu = 'main'; // 追踪当前菜单状态
+        this.currentMenu = 'main';
     }
 
     init() {
-        this.themeManager = new ThemeManager();
-        this.themeManager.init();
-        
-        // 初始化按钮事件监听
+        console.log('Initializing game manager...');
         this.initializeEventListeners();
-        
-        // 初始化游戏实例
         this.game = new Game();
         this.game.init();
+        console.log('Game manager initialized successfully');
     }
 
     initializeEventListeners() {
-        // 主菜单按钮
         document.getElementById('levelSelectBtn').addEventListener('click', () => {
             this.showMenu('levelSelect');
-        });
-
-        document.getElementById('leaderboardBtn').addEventListener('click', () => {
-            this.showMenu('leaderboard');
+            this.initializeLevelSelect();
         });
 
         document.getElementById('helpBtn').addEventListener('click', () => {
             this.hideAllMenus();
             this.showGameContainer();
         });
+    }
 
-        // 返回按钮的处理
-        const backButtons = document.querySelectorAll('[onclick="gameManager.handleBackButton()"]');
-        backButtons.forEach(button => {
-            button.onclick = () => this.handleBackButton();
+    initializeLevelSelect() {
+        const levelList = document.getElementById('levelList');
+        levelList.innerHTML = '';
+        
+        this.game.levelManager.levels.forEach(level => {
+            const button = document.createElement('button');
+            button.className = 'level-button';
+            button.innerHTML = `
+                <h3>${level.name}</h3>
+                <p>${level.description}</p>
+            `;
+            button.onclick = () => this.startLevel(level.id);
+            levelList.appendChild(button);
         });
     }
 
-    showMenu(menuId) {
+    startLevel(levelId) {
         this.hideAllMenus();
-        document.getElementById(menuId + 'Menu').style.display = 'flex';
-        this.currentMenu = menuId;
-    }
-
-    hideAllMenus() {
-        const menus = ['mainMenu', 'leaderboardMenu', 'levelSelect'];
-        menus.forEach(menu => {
-            document.getElementById(menu).style.display = 'none';
-        });
-    }
-
-    showGameContainer() {
-        document.querySelector('.game-container').style.display = 'block';
-    }
-
-    handleBackButton() {
-        if (this.currentMenu === 'main') {
-            return;
-        }
-        this.hideAllMenus();
-        this.showMenu('main');
+        this.showGameContainer();
+        this.game.loadLevel(this.game.levelManager.getLevelConfig(levelId));
     }
 }
 
