@@ -192,4 +192,49 @@ class Game {
         
         // 绘制食物和障碍物...
     }
+
+    setupEventListeners() {
+        // 键盘控制
+        document.addEventListener('keydown', (e) => this.handleKeyPress(e));
+        
+        // 游戏控制按钮
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const speedSlider = document.getElementById('speedSlider');
+        
+        if (startBtn) {
+            startBtn.addEventListener('click', () => {
+                if (!this.gameLoop) {
+                    this.startGame();
+                } else {
+                    this.resetGame();
+                    this.startGame();
+                }
+            });
+        }
+        
+        if (pauseBtn) {
+            pauseBtn.addEventListener('click', () => this.togglePause());
+        }
+        
+        if (speedSlider) {
+            speedSlider.addEventListener('input', (e) => {
+                this.speed = 200 - (e.target.value * 15); // 速度范围：50-185ms
+            });
+        }
+    }
+
+    startGame() {
+        if (this.gameLoop) return;
+        
+        this.isPaused = false;
+        this.gameLoop = setInterval(() => {
+            if (!this.isPaused) {
+                this.update();
+                this.draw();
+            }
+        }, this.speed);
+        
+        document.getElementById('startBtn').textContent = '重新开始';
+    }
 }
