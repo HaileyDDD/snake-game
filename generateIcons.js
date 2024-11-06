@@ -1,14 +1,13 @@
 class IconManager {
     constructor() {
-        this.icons = {};
+        this.icons = new Map();
         this.initialized = false;
     }
 
     init() {
         if (this.initialized) return;
-        
-        // 生成并更新图标
         this.generateIcons();
+        this.updatePageIcons();
         this.initialized = true;
     }
 
@@ -33,18 +32,19 @@ class IconManager {
                 ctx.fill();
             }
             
-            // 存储图标的 data URL
-            const dataUrl = canvas.toDataURL('image/png');
-            this.icons[`icon-${size}x${size}`] = dataUrl;
-            
-            // 更新页面中的图标
-            this.updateIconInDocument(size, dataUrl);
+            // 只存储在内存中，不创建下载链接
+            this.icons.set(size, canvas.toDataURL('image/png'));
         });
     }
 
-    updateIconInDocument(size, dataUrl) {
-        // 更新 favicon
-        if (size === 16 || size === 32) {
+    updatePageIcons() {
+        // 直接更新页面中的图标引用
+        this.updateFavicon();
+        this.updateAppleTouchIcon();
+    }
+
+    updateFavicon() {
+        [16, 32].forEach(size => {
             let link = document.querySelector(`link[sizes="${size}x${size}"]`);
             if (!link) {
                 link = document.createElement('link');
@@ -53,35 +53,30 @@ class IconManager {
                 link.sizes = `${size}x${size}`;
                 document.head.appendChild(link);
             }
-            link.href = dataUrl;
-        }
+            link.href = this.icons.get(size);
+        });
+    }
 
-        // 更新 apple-touch-icon
-        if (size === 192) {
-            let appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
-            if (appleIcon) {
-                appleIcon.href = dataUrl;
-            }
+    updateAppleTouchIcon() {
+        let link = document.querySelector('link[rel="apple-touch-icon"]');
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'apple-touch-icon';
+            document.head.appendChild(link);
         }
-
-        // 更新 manifest 图标
-        if (size === 192 || size === 512) {
-            // 在这里可以更新 manifest 的图标，但需要服务器支持
-            console.log(`Icon ${size}x${size} generated and updated`);
-        }
+        link.href = this.icons.get(192);
     }
 
     getIcon(size) {
-        return this.icons[`icon-${size}x${size}`] || null;
+        return this.icons.get(size);
     }
 }
 
 // 创建单例实例
 const iconManager = new IconManager();
 
-// 页面加载完成后初始化一次
+// 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
-    // 延迟初始化，确保其他资源加载完成
     setTimeout(() => {
         iconManager.init();
     }, 100);
