@@ -111,9 +111,42 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- 主要内容区域 -->
-    <main>
-        <!-- SEO 优化的标题和描述 -->
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">超级贪吃蛇</div>
+            <div class="nav-buttons">
+                <button class="nav-button settings">设置</button>
+                <button class="nav-button language">语言</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 游戏主体区域 - 放在最前面 -->
+    <div class="game-main">
+        <div class="game-container">
+            <div class="game-info">
+                <div>关卡: <span id="level">1</span></div>
+                <div>分数: <span id="score">0</span></div>
+                <div>最高分: <span id="highScore">0</span></div>
+            </div>
+            
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            
+            <div class="game-controls">
+                <button id="startBtn">开始游戏</button>
+                <button id="pauseBtn">暂停</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 广告区域 -->
+    <div class="ad-container">
+        <div id="ad-space">广告位置</div>
+    </div>
+
+    <!-- SEO 内容区域 - 移到游戏区域下方 -->
+    <main class="content-section">
         <article class="game-description-seo">
             <h1>超级贪吃蛇 - 创新玩法的经典游戏</h1>
             <p>欢迎来到超级贪吃蛇游戏！这是一款融合经典玩法与现代特效的创新游戏。我们为传统的贪吃蛇游戏注入了新的活力，让您体验前所未有的游戏乐趣。</p>
@@ -130,26 +163,16 @@
             </section>
         </article>
 
-        <!-- 现有的游戏内容保持不变 -->
-        
-        <!-- 添加相关游戏推荐，提高用户停留时间 -->
-        <section class="related-games">
-            <h2>猜你喜欢</h2>
+        <!-- 游戏推荐区域 -->
+        <section class="games-section">
+            <h2>更多好玩的游戏</h2>
             <div class="games-grid">
-                <!-- 相关游戏卡片 -->
-            </div>
-        </section>
-
-        <!-- 添加用户评价，提高可信度 -->
-        <section class="user-reviews">
-            <h2>玩家评价</h2>
-            <div class="reviews-grid">
-                <!-- 用户评价内容 -->
+                <!-- 游戏卡片 -->
             </div>
         </section>
     </main>
 
-    <!-- 优化的页脚，包含更多有用链接 -->
+    <!-- 页脚区域 -->
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-section">
@@ -183,7 +206,11 @@
         </div>
     </footer>
 
-    <!-- 其他脚本引用保持不变 -->
+    <!-- 脚本引用 -->
+    <script src="levels.js"></script>
+    <script src="game.js"></script>
+    <script src="themes.js"></script>
+    <script src="gameManager.js"></script>
     <script>
         // 忽略特定的错误
         window.addEventListener('error', function(e) {
