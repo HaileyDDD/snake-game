@@ -206,13 +206,31 @@ class Game {
     }
 
     togglePause() {
+        console.log('Toggling pause state');
         this.isPaused = !this.isPaused;
-        document.getElementById('pauseBtn').textContent = 
-            this.isPaused ? '继续' : '暂停';
         
-        if (window.gameManager) {
-            window.gameManager.isGameActive = !this.isPaused;
+        // 更新按钮文本
+        const pauseBtn = document.getElementById('pauseBtn');
+        if (pauseBtn) {
+            pauseBtn.textContent = this.isPaused ? '继续' : '暂停';
         }
+        
+        // 显示暂停状态
+        this.showPauseStatus();
+    }
+
+    showPauseStatus() {
+        // 创建或更新暂停状态显示
+        let pauseStatus = document.getElementById('pauseStatus');
+        if (!pauseStatus) {
+            pauseStatus = document.createElement('div');
+            pauseStatus.id = 'pauseStatus';
+            pauseStatus.className = 'pause-status';
+            this.canvas.parentNode.appendChild(pauseStatus);
+        }
+        
+        pauseStatus.textContent = this.isPaused ? '游戏已暂停' : '';
+        pauseStatus.style.display = this.isPaused ? 'block' : 'none';
     }
 
     handleFoodCollision() {
@@ -341,6 +359,17 @@ class Game {
         // 绘制特
         if (this.isPoweredUp) {
             this.drawPowerUpEffect();
+        }
+        
+        // 如果游戏暂停，绘制半透明遮罩
+        if (this.isPaused) {
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            this.ctx.fillStyle = '#fff';
+            this.ctx.font = '30px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('游戏已暂停', this.canvas.width/2, this.canvas.height/2);
         }
     }
 

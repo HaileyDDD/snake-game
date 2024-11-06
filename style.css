@@ -942,7 +942,7 @@ canvas {
     }
 }
 
-/* 确保头���导航栏内容居中 */
+/* 确保头导航栏内容居中 */
 .header-content {
     max-width: 1200px;
     margin: 0 auto;
@@ -967,4 +967,58 @@ canvas {
     justify-content: center;
     gap: 20px;
     margin: 20px auto;
+}
+
+/* 游戏说明样式 */
+.game-instructions {
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.game-instructions h3 {
+    color: #fff;
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.instruction-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.control-guide, .game-rules, .power-up-guide {
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.game-instructions h4 {
+    color: #4CAF50;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.game-instructions ul {
+    list-style: none;
+    padding: 0;
+}
+
+.game-instructions li {
+    color: #e1e1e1;
+    margin-bottom: 10px;
+    padding-left: 20px;
+    position: relative;
+}
+
+.game-instructions li::before {
+    content: "•";
+    color: #4CAF50;
+    position: absolute;
+    left: 0;
 }
