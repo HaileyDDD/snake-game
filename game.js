@@ -298,12 +298,21 @@ class Game {
             powerUpLevel.animation
         );
         
+        // 保存当前游戏状态
+        const currentGameState = {
+            isGameActive: this.isGameActive,
+            isPaused: this.isPaused,
+            gameLoop: this.gameLoop
+        };
+        
         // 设置变身持续时间
         if (this.powerUpTimer) clearTimeout(this.powerUpTimer);
-        this.powerUpTimer = setTimeout(
-            () => this.deactivatePowerUp(powerUpLevel), 
-            powerUpLevel.effect.duration
-        );
+        this.powerUpTimer = setTimeout(() => {
+            // 恢复游戏状态
+            this.isGameActive = currentGameState.isGameActive;
+            this.isPaused = currentGameState.isPaused;
+            this.deactivatePowerUp(powerUpLevel);
+        }, powerUpLevel.effect.duration);
     }
 
     getPowerUpLevel() {
@@ -343,10 +352,42 @@ class Game {
     }
 
     deactivatePowerUp(powerUpLevel) {
+        // 不要改变游戏状态，只需要��复正常速度
         this.isPoweredUp = false;
         this.speed = this.originalSpeed;
+        
+        // 显示状态变化提示
         this.showNotification('无敌模式结束！', 'power-down');
-        this.playSound('powerDown');
+        
+        // 确保游戏继续运行
+        if (this.isGameActive) {
+            // 如果游戏还在进行中，继续游戏循环
+            if (!this.gameLoop) {
+                this.startGameLoop();
+            }
+        }
+    }
+
+    startGameLoop() {
+        const gameLoop = (timestamp) => {
+            if (!this.lastUpdateTime) this.lastUpdateTime = timestamp;
+            
+            const deltaTime = timestamp - this.lastUpdateTime;
+            
+            if (deltaTime >= this.speed) {
+                if (!this.isPaused && this.isGameActive) {
+                    this.update();
+                    this.draw();
+                    this.lastUpdateTime = timestamp;
+                }
+            }
+            
+            if (this.isGameActive) {
+                this.gameLoop = requestAnimationFrame(gameLoop);
+            }
+        };
+        
+        this.gameLoop = requestAnimationFrame(gameLoop);
     }
 
     showScoreAnimation(text, x, y) {
