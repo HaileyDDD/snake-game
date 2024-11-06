@@ -11,7 +11,6 @@ class GameManager {
             this.game.init();
             this.initializeEventListeners();
             this.loadHighScore();
-            this.setupKeyboardControls();
             console.log('Game manager initialized successfully');
         } catch (error) {
             console.error('Game initialization error:', error);
@@ -23,15 +22,26 @@ class GameManager {
         const pauseBtn = document.getElementById('pauseBtn');
 
         if (startBtn) {
-            startBtn.addEventListener('click', () => {
-                this.game.startGame();
-            });
+            startBtn.onclick = () => {
+                console.log('Start button clicked');
+                if (this.game) {
+                    this.game.startGame();
+                    this.isGameActive = true;
+                }
+            };
+        } else {
+            console.error('Start button not found');
         }
 
         if (pauseBtn) {
-            pauseBtn.addEventListener('click', () => {
-                this.game.togglePause();
-            });
+            pauseBtn.onclick = () => {
+                console.log('Pause button clicked');
+                if (this.game) {
+                    this.game.togglePause();
+                }
+            };
+        } else {
+            console.error('Pause button not found');
         }
     }
 

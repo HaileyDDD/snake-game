@@ -192,30 +192,26 @@
     <script src="themes.js"></script>
     <script src="gameManager.js"></script>
     <script>
-        // 忽略特定的错误
+        // 初始化游戏
+        let gameManager;
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                console.log('Initializing game...');
+                gameManager = new GameManager();
+                window.gameManager = gameManager;
+                gameManager.init();
+            } catch (error) {
+                console.error('Error initializing game:', error);
+            }
+        });
+
+        // 错误处理
         window.addEventListener('error', function(e) {
-            // 忽略第三方脚本错误
             if (e.filename && !e.filename.includes('snake-game')) {
                 e.preventDefault();
                 return;
             }
-            
-            // 忽略权限策略警告
-            if (e.message.includes('Permissions policy') || 
-                e.message.includes('deviceorientation')) {
-                e.preventDefault();
-                return;
-            }
-            
             console.error('Game Error:', e.message);
-        });
-
-        // 忽略未处理的 Promise 拒绝
-        window.addEventListener('unhandledrejection', function(e) {
-            if (e.reason && e.reason.toString().includes('Could not establish connection')) {
-                e.preventDefault();
-                return;
-            }
         });
     </script>
 </body>

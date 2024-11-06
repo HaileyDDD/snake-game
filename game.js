@@ -68,6 +68,7 @@ class Game {
         this.ctx = this.canvas.getContext('2d');
         this.resetGame();
         this.setupEventListeners();
+        this.draw();
         console.log('Game initialized successfully');
     }
 
@@ -657,11 +658,18 @@ class Game {
     }
 
     startGame() {
+        console.log('Starting game...');
+        // 清除可能存在的旧游戏循环
         if (this.gameLoop) {
             clearInterval(this.gameLoop);
+            this.gameLoop = null;
         }
         
+        // 重置游戏状态
+        this.resetGame();
         this.isPaused = false;
+        
+        // 启动游戏循环
         this.gameLoop = setInterval(() => {
             if (!this.isPaused) {
                 this.update();
@@ -670,9 +678,7 @@ class Game {
         }, this.speed);
         
         document.getElementById('startBtn').textContent = '重新开始';
-        if (window.gameManager) {
-            window.gameManager.isGameActive = true;
-        }
+        console.log('Game started successfully');
     }
 
     playSound(soundName) {
