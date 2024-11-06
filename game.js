@@ -18,6 +18,44 @@ class Game {
         this.levelManager = new LevelManager();
         this.sounds = null;
         this.isSoundEnabled = false;
+        this.powerUpLevels = [
+            {
+                score: 100,
+                name: "黄金蛇",
+                color: '#FFD700',
+                effect: {
+                    speedBoost: 1.3,
+                    invincible: true,
+                    duration: 8000
+                },
+                animation: 'golden'
+            },
+            {
+                score: 200,
+                name: "彩虹蛇",
+                color: 'rainbow',
+                effect: {
+                    speedBoost: 1.5,
+                    invincible: true,
+                    duration: 10000,
+                    wallPass: true
+                },
+                animation: 'rainbow'
+            },
+            {
+                score: 300,
+                name: "闪电蛇",
+                color: '#00ffff',
+                effect: {
+                    speedBoost: 2.0,
+                    invincible: true,
+                    duration: 12000,
+                    wallPass: true,
+                    magneticFood: true
+                },
+                animation: 'lightning'
+            }
+        ];
     }
 
     init() {
@@ -200,26 +238,71 @@ class Game {
         this.isPoweredUp = true;
         this.foodEatenCount = 0;
         this.originalSpeed = this.speed;
-        this.speed = this.speed * 0.7; // 提升30%速度
+
+        // 根据分数确定变身等级
+        const powerUpLevel = this.getPowerUpLevel();
         
-        // 变视觉效果
-        this.snake.forEach(segment => {
-            this.createPowerUpEffect(segment.x * 20, segment.y * 20);
-        });
+        // 应用变身效果
+        this.speed = this.speed * powerUpLevel.effect.speedBoost;
+        this.currentPowerUpEffect = powerUpLevel.effect;
+        
+        // 显示变身动画
+        this.showTransformationAnimation(powerUpLevel.animation);
         
         // 显示变身提示
-        this.showNotification('无敌模式激活！速度提升30%！', 'power-up');
+        this.showNotification(
+            `${powerUpLevel.name}形态激活！\n速度提升${(powerUpLevel.effect.speedBoost - 1) * 100}%！`, 
+            powerUpLevel.animation
+        );
         
         // 设置变身持续时间
         if (this.powerUpTimer) clearTimeout(this.powerUpTimer);
-        this.powerUpTimer = setTimeout(() => this.deactivatePowerUp(), this.powerUpDuration);
-        this.playSound('powerUp');
+        this.powerUpTimer = setTimeout(
+            () => this.deactivatePowerUp(powerUpLevel), 
+            powerUpLevel.effect.duration
+        );
     }
 
-    deactivatePowerUp() {
+    getPowerUpLevel() {
+        // 从高到低检查分数段
+        for (let i = this.powerUpLevels.length - 1; i >= 0; i--) {
+            if (this.score >= this.powerUpLevels[i].score) {
+                return this.powerUpLevels[i];
+            }
+        }
+        return this.powerUpLevels[0]; // 默认返回第一级变身
+    }
+
+    showTransformationAnimation(type) {
+        // 创建闪光效果
+        const flash = document.createElement('div');
+        flash.className = `transformation-flash ${type}`;
+        document.body.appendChild(flash);
+        
+        // 创建变身光环
+        this.snake.forEach((segment, index) => {
+            setTimeout(() => {
+                this.createTransformationRing(segment.x * 20, segment.y * 20, type);
+            }, index * 50);
+        });
+        
+        setTimeout(() => flash.remove(), 500);
+    }
+
+    createTransformationRing(x, y, type) {
+        const ring = document.createElement('div');
+        ring.className = `transformation-ring ${type}`;
+        ring.style.left = `${x}px`;
+        ring.style.top = `${y}px`;
+        document.body.appendChild(ring);
+        
+        setTimeout(() => ring.remove(), 1000);
+    }
+
+    deactivatePowerUp(powerUpLevel) {
         this.isPoweredUp = false;
         this.speed = this.originalSpeed;
-        this.showNotification('敌模式结束！', 'power-down');
+        this.showNotification('无敌模式结束！', 'power-down');
         this.playSound('powerDown');
     }
 
@@ -232,16 +315,6 @@ class Game {
         document.body.appendChild(scoreText);
         
         setTimeout(() => scoreText.remove(), 1000);
-    }
-
-    createPowerUpEffect(x, y) {
-        const effect = document.createElement('div');
-        effect.className = 'power-up-effect';
-        effect.style.left = `${x}px`;
-        effect.style.top = `${y}px`;
-        document.body.appendChild(effect);
-        
-        setTimeout(() => effect.remove(), 500);
     }
 
     draw() {
@@ -406,24 +479,50 @@ class Game {
         const x = segment.x * 20;
         const y = segment.y * 20;
         
-        // 渐变色蛇身
-        const gradient = this.ctx.createRadialGradient(
-            x + 10, y + 10, 0,
-            x + 10, y + 10, 10
-        );
-        
         if (this.isPoweredUp) {
-            gradient.addColorStop(0, '#FFD700');
-            gradient.addColorStop(1, '#FFA500');
+            const powerUpLevel = this.getPowerUpLevel();
+            
+            if (powerUpLevel.color === 'rainbow') {
+                // 彩虹效果
+                const hue = (Date.now() / 10 + index * 10) % 360;
+                this.ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+            } else {
+                // 其他变身效果
+                this.ctx.fillStyle = powerUpLevel.color;
+            }
+            
+            // 特殊效果
+            switch (powerUpLevel.animation) {
+                case 'lightning':
+                    this.drawLightningEffect(x, y);
+                    break;
+                case 'rainbow':
+                    this.drawRainbowTrail(x, y);
+                    break;
+                case 'golden':
+                    this.drawGoldenSparkles(x, y);
+                    break;
+            }
         } else {
-            gradient.addColorStop(0, '#4CAF50');
-            gradient.addColorStop(1, '#388E3C');
+            // 渐变色蛇身
+            const gradient = this.ctx.createRadialGradient(
+                x + 10, y + 10, 0,
+                x + 10, y + 10, 10
+            );
+            
+            if (this.isPoweredUp) {
+                gradient.addColorStop(0, '#FFD700');
+                gradient.addColorStop(1, '#FFA500');
+            } else {
+                gradient.addColorStop(0, '#4CAF50');
+                gradient.addColorStop(1, '#388E3C');
+            }
+            
+            this.ctx.fillStyle = gradient;
+            this.ctx.beginPath();
+            this.ctx.arc(x + 10, y + 10, 8, 0, Math.PI * 2);
+            this.ctx.fill();
         }
-        
-        this.ctx.fillStyle = gradient;
-        this.ctx.beginPath();
-        this.ctx.arc(x + 10, y + 10, 8, 0, Math.PI * 2);
-        this.ctx.fill();
     }
 
     drawFood() {
@@ -605,6 +704,51 @@ class Game {
         document.body.appendChild(flash);
         
         setTimeout(() => flash.remove(), 500);
+    }
+
+    showNotification(message, type) {
+        // 创建通知元素
+        const notification = document.createElement('div');
+        notification.className = `game-notification ${type}`;
+        notification.textContent = message;
+        
+        // 设置样式
+        notification.style.position = 'fixed';
+        notification.style.top = '50%';
+        notification.style.left = '50%';
+        notification.style.transform = 'translate(-50%, -50%)';
+        notification.style.background = type === 'power-up' ? 
+            'rgba(255, 215, 0, 0.9)' : 'rgba(255, 69, 0, 0.9)';
+        notification.style.color = 'white';
+        notification.style.padding = '15px 30px';
+        notification.style.borderRadius = '10px';
+        notification.style.fontSize = '20px';
+        notification.style.fontWeight = 'bold';
+        notification.style.zIndex = '1000';
+        notification.style.animation = 'fadeInOut 2s ease-in-out forwards';
+        
+        // 添加到页面
+        document.body.appendChild(notification);
+        
+        // 设置自动移除
+        setTimeout(() => {
+            notification.remove();
+        }, 2000);
+    }
+
+    // 特殊效果绘制方法
+    drawLightningEffect(x, y) {
+        this.ctx.shadowBlur = 20;
+        this.ctx.shadowColor = '#00ffff';
+        // 添加闪电效果
+    }
+
+    drawRainbowTrail(x, y) {
+        // 添加彩虹拖尾效果
+    }
+
+    drawGoldenSparkles(x, y) {
+        // 添加金色粒子效果
     }
 }
 

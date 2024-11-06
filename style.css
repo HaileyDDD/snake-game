@@ -443,4 +443,313 @@ html {
 .game-container.active {
     touch-action: none;
     user-select: none;
-} 
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+    10% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    90% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+}
+
+.game-notification {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.game-notification.power-up {
+    background: linear-gradient(135deg, #ffd700, #ffa500) !important;
+}
+
+.game-notification.power-down {
+    background: linear-gradient(135deg, #ff6b6b, #ee5253) !important;
+}
+
+/* 变身动画效果 */
+.transformation-flash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0) 70%);
+    pointer-events: none;
+    animation: flash 0.8s ease-out forwards;
+    z-index: 1000;
+}
+
+.transformation-ring {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid gold;
+    pointer-events: none;
+    animation: ringExpand 1s ease-out forwards;
+    z-index: 1000;
+    box-shadow: 
+        0 0 10px gold,
+        inset 0 0 10px gold;
+}
+
+@keyframes flash {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@keyframes ringExpand {
+    0% {
+        transform: scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* 变身相关的动画效果 */
+@keyframes powerUpGlow {
+    0% { filter: drop-shadow(0 0 5px gold); }
+    50% { filter: drop-shadow(0 0 20px gold); }
+    100% { filter: drop-shadow(0 0 5px gold); }
+}
+
+@keyframes powerUpRainbow {
+    0% { background: red; }
+    17% { background: orange; }
+    33% { background: yellow; }
+    50% { background: green; }
+    67% { background: blue; }
+    83% { background: indigo; }
+    100% { background: violet; }
+}
+
+@keyframes powerUpPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+@keyframes powerUpSparkle {
+    0% { opacity: 0; transform: scale(0) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1) rotate(180deg); }
+    100% { opacity: 0; transform: scale(0) rotate(360deg); }
+}
+
+/* 食物吃到时的动画 */
+@keyframes foodCollect {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(2); opacity: 0.5; }
+    100% { transform: scale(3); opacity: 0; }
+}
+
+/* 分数增加的动画 */
+@keyframes scorePopup {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    50% { transform: translateY(-20px) scale(1.5); }
+    100% { transform: translateY(-40px) scale(1); opacity: 0; }
+}
+
+/* 变身时的粒子效果 */
+.particle {
+    position: absolute;
+    pointer-events: none;
+    animation: powerUpSparkle 0.8s ease-out forwards;
+}
+
+/* 变身状态下的蛇身效果 */
+.powered-up-snake {
+    animation: 
+        powerUpGlow 2s infinite,
+        powerUpPulse 1s infinite;
+}
+
+/* 食物被吃到时的效果 */
+.food-collect {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,215,0,1) 0%, rgba(255,215,0,0) 70%);
+    animation: foodCollect 0.5s ease-out forwards;
+}
+
+/* 分数增加的效果 */
+.score-popup {
+    position: absolute;
+    color: gold;
+    font-size: 24px;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
+    pointer-events: none;
+    animation: scorePopup 1s ease-out forwards;
+    z-index: 1000;
+}
+
+/* 变身闪光效果 */
+.transformation-flash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0) 70%);
+    pointer-events: none;
+    animation: flash 0.8s ease-out forwards;
+    z-index: 1000;
+}
+
+/* 变身光环效果 */
+.transformation-ring {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid gold;
+    pointer-events: none;
+    animation: ringExpand 1s ease-out forwards;
+    z-index: 1000;
+    box-shadow: 
+        0 0 10px gold,
+        inset 0 0 10px gold;
+}
+
+/* 变身状态通知 */
+.power-up-notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, #ffd700, #ffa500);
+    color: white;
+    padding: 20px 40px;
+    border-radius: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    box-shadow: 0 0 20px rgba(255,215,0,0.5);
+    animation: notificationPop 0.5s ease-out forwards;
+    z-index: 1001;
+}
+
+@keyframes notificationPop {
+    0% { transform: translate(-50%, -50%) scale(0); }
+    50% { transform: translate(-50%, -50%) scale(1.2); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* 游戏结束效果 */
+.game-over {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.5s ease-out forwards;
+    z-index: 1002;
+}
+
+.game-over-content {
+    background: rgba(255,255,255,0.1);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    animation: dropIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes dropIn {
+    0% { transform: translateY(-100px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+/* 响应式设计中的动画优化 */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* 变身特效样式 */
+.transformation-flash.golden {
+    background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0) 70%);
+}
+
+.transformation-flash.rainbow {
+    background: linear-gradient(
+        45deg,
+        rgba(255,0,0,0.2),
+        rgba(255,165,0,0.2),
+        rgba(255,255,0,0.2),
+        rgba(0,255,0,0.2),
+        rgba(0,0,255,0.2),
+        rgba(238,130,238,0.2)
+    );
+}
+
+.transformation-flash.lightning {
+    background: radial-gradient(circle, rgba(0,255,255,0.3) 0%, rgba(0,255,255,0) 70%);
+    animation: flash 0.5s ease-out infinite;
+}
+
+.transformation-ring.golden {
+    border-color: gold;
+    box-shadow: 0 0 15px gold;
+}
+
+.transformation-ring.rainbow {
+    border: 2px solid transparent;
+    background: linear-gradient(45deg, red, orange, yellow, green, blue, violet);
+    background-clip: padding-box;
+}
+
+.transformation-ring.lightning {
+    border-color: cyan;
+    box-shadow: 0 0 20px cyan;
+}
+
+/* 分数提示样式 */
+.score-milestone {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 20px 40px;
+    border-radius: 10px;
+    font-size: 24px;
+    text-align: center;
+    animation: popIn 0.5s ease-out forwards;
+    z-index: 1000;
+}
+
+@keyframes popIn {
+    0% { transform: translate(-50%, -50%) scale(0); }
+    50% { transform: translate(-50%, -50%) scale(1.2); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+}

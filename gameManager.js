@@ -1,17 +1,18 @@
 class GameManager {
     constructor() {
         this.game = null;
-        this.leaderboardData = [];
         this.isGameActive = false;
     }
 
     init() {
         try {
+            console.log('Initializing game manager...');
             this.game = new Game();
             this.game.init();
             this.initializeEventListeners();
             this.loadHighScore();
             this.setupKeyboardControls();
+            console.log('Game manager initialized successfully');
         } catch (error) {
             console.error('Game initialization error:', error);
         }
