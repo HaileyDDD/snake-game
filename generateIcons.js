@@ -25,14 +25,35 @@ class IconManager {
             }
             
             // 存储图标的 data URL
-            this.icons[`icon-${size}x${size}`] = canvas.toDataURL('image/png');
+            const dataUrl = canvas.toDataURL('image/png');
+            this.icons[`icon-${size}x${size}`] = dataUrl;
             
-            // 如果存在对应的 link 标签，更新其 href
-            const linkTag = document.querySelector(`link[sizes="${size}x${size}"]`);
-            if (linkTag) {
-                linkTag.href = this.icons[`icon-${size}x${size}`];
-            }
+            // 更新页面中的图标链接
+            this.updateIconLink(size, dataUrl);
         });
+    }
+
+    updateIconLink(size, dataUrl) {
+        // 更新 favicon
+        if (size === 16 || size === 32) {
+            let link = document.querySelector(`link[sizes="${size}x${size}"]`);
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                link.type = 'image/png';
+                link.sizes = `${size}x${size}`;
+                document.head.appendChild(link);
+            }
+            link.href = dataUrl;
+        }
+        
+        // 更新 apple-touch-icon
+        if (size === 192) {
+            let appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
+            if (appleIcon) {
+                appleIcon.href = dataUrl;
+            }
+        }
     }
 
     getIcon(size) {
@@ -41,9 +62,12 @@ class IconManager {
 }
 
 // 创建单例实例
-window.iconManager = new IconManager();
+const iconManager = new IconManager();
 
 // 页面加载完成后生成图标
 document.addEventListener('DOMContentLoaded', () => {
-    window.iconManager.generateIcons();
-}); 
+    iconManager.generateIcons();
+});
+
+// 导出实例供其他模块使用
+window.iconManager = iconManager; 
