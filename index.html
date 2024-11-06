@@ -122,55 +122,56 @@
         </div>
     </header>
 
-    <!-- 游戏主体区域 - 放在最前面 -->
-    <div class="game-main">
-        <div class="game-container">
-            <div class="game-info">
-                <div>关卡: <span id="level">1</span></div>
-                <div>分数: <span id="score">0</span></div>
-                <div>最高分: <span id="highScore">0</span></div>
-            </div>
-            
-            <canvas id="gameCanvas" width="400" height="400"></canvas>
-            
-            <div class="game-controls">
-                <button id="startBtn">开始游戏</button>
-                <button id="pauseBtn">暂停</button>
+    <!-- 修改主体结构 -->
+    <div class="main-container">
+        <!-- 游戏区域放在最前面 -->
+        <div class="game-main">
+            <div class="game-container">
+                <div class="game-info">
+                    <div>关卡: <span id="level">1</span></div>
+                    <div>分数: <span id="score">0</span></div>
+                    <div>最高分: <span id="highScore">0</span></div>
+                </div>
+                <canvas id="gameCanvas" width="400" height="400"></canvas>
+                <div class="game-controls">
+                    <button id="startBtn">开始游戏</button>
+                    <button id="pauseBtn">暂停</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- 广告区域 -->
-    <div class="ad-container">
-        <div id="ad-space">广告位置</div>
-    </div>
+        <!-- 广告区域 -->
+        <div class="ad-container">
+            <div id="ad-space">广告位置</div>
+        </div>
 
-    <!-- SEO 内容区域 - 移到游戏区域下方 -->
-    <main class="content-section">
-        <article class="game-description-seo">
-            <h1>超级贪吃蛇 - 创新玩法的经典游戏</h1>
-            <p>欢迎来到超级贪吃蛇游戏！这是一款融合经典玩法与现代特效的创新游戏。我们为传统的贪吃蛇游戏注入了新的活力，让您体验前所未有的游戏乐趣。</p>
-            
-            <section>
-                <h2>游戏特色</h2>
-                <ul>
-                    <li><strong>变身机制：</strong>连续吃到特定数量的食物可以触发变身效果，获得无敌状态和速度提升</li>
-                    <li><strong>关卡挑战：</strong>从基础到地狱模式的多个难度等级，考验您的技巧</li>
-                    <li><strong>特殊技能：</strong>变身后可以穿墙，让游戏策略更加丰富</li>
-                    <li><strong>精美画面：</strong>流畅的动画效果和炫酷的视觉特效</li>
-                    <li><strong>免费游玩：</strong>完全免费，无需下载，打开网页即可开始</li>
-                </ul>
+        <!-- SEO内容移到最后 -->
+        <div class="content-section">
+            <article class="game-description-seo">
+                <h1>超级贪吃蛇 - 创新玩法的经典游戏</h1>
+                <p>欢迎来到超级贪吃蛇游戏！这是一款融合经典玩法与现代特效的创新游戏。我们为传统的贪吃蛇游戏注入了新的活力，让您体验前所未有的游戏乐趣。</p>
+                
+                <section>
+                    <h2>游戏特色</h2>
+                    <ul>
+                        <li><strong>变身机制：</strong>连续吃到特定数量的食物可以触发变身效果，获得无敌状态和速度提升</li>
+                        <li><strong>关卡挑战：</strong>从基础到地狱模式的多个难度等级，考验您的技巧</li>
+                        <li><strong>特殊技能：</strong>变身后可以穿墙，让游戏策略更加丰富</li>
+                        <li><strong>精美画面：</strong>流畅的动画效果和炫酷的视觉特效</li>
+                        <li><strong>免费游玩：</strong>完全免费，无需下载，打开网页即可开始</li>
+                    </ul>
+                </section>
+            </article>
+
+            <!-- 游戏推荐区域 -->
+            <section class="games-section">
+                <h2>更多好玩的游戏</h2>
+                <div class="games-grid">
+                    <!-- 游戏卡片 -->
+                </div>
             </section>
-        </article>
-
-        <!-- 游戏推荐区域 -->
-        <section class="games-section">
-            <h2>更多好玩的游戏</h2>
-            <div class="games-grid">
-                <!-- 游戏卡片 -->
-            </div>
-        </section>
-    </main>
+        </div>
+    </div>
 
     <!-- 页脚区域 -->
     <footer class="footer">
