@@ -7,6 +7,11 @@ class GameManager {
     init() {
         try {
             console.log('Initializing game manager...');
+            const styleSheet = document.querySelector('link[rel="stylesheet"]');
+            if (styleSheet) {
+                styleSheet.href = styleSheet.href.split('?')[0] + '?v=' + new Date().getTime();
+            }
+            
             this.game = new Game();
             this.game.init();
             this.initializeEventListeners();
