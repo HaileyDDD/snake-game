@@ -32,6 +32,7 @@ class GameManager {
                 if (this.game) {
                     this.game.startGame();
                     this.isGameActive = true;
+                    document.querySelector('.game-container').classList.add('active');
                 }
             };
         } else {
@@ -41,13 +42,26 @@ class GameManager {
         if (pauseBtn) {
             pauseBtn.onclick = () => {
                 console.log('Pause button clicked');
-                if (this.game) {
+                if (this.game && this.isGameActive) {
                     this.game.togglePause();
+                    pauseBtn.textContent = this.game.isPaused ? '继续' : '暂停';
                 }
             };
         } else {
             console.error('Pause button not found');
         }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && this.isGameActive) {
+                e.preventDefault();
+                if (this.game) {
+                    this.game.togglePause();
+                    if (pauseBtn) {
+                        pauseBtn.textContent = this.game.isPaused ? '继续' : '暂停';
+                    }
+                }
+            }
+        });
     }
 
     loadHighScore() {
@@ -178,6 +192,7 @@ class GameManager {
 
     gameOver() {
         this.isGameActive = false;
+        document.querySelector('.game-container').classList.remove('active');
         clearInterval(this.gameLoop);
         this.gameLoop = null;
         

@@ -61,9 +61,9 @@ class Game {
         this.updateInterval = 1000/60;
 
         this.difficultyIncrease = {
-            speedIncrement: 2,  // 每吃到食物增加的速度
-            maxSpeed: 50,       // 最大速度限制
-            scoreThreshold: 50  // 每多少分增加一次难度
+            speedIncrement: 1,      // 降低每次速度增加的幅度
+            maxSpeed: 80,           // 提高最小速度限制（因为速度值是间隔时间，所以是下限）
+            scoreThreshold: 100     // 提高分数阈值，减少速度提升的频率
         };
         
         // 添加游戏统计
@@ -412,33 +412,62 @@ class Game {
     }
 
     deactivatePowerUp(powerUpLevel) {
-        // 不要改变游戏状态，只需要复正常速度
+        // 保存当前状态
+        const currentState = {
+            isGameActive: this.isGameActive,
+            isPaused: this.isPaused,
+            score: this.score,
+            snake: [...this.snake],
+            direction: this.direction,
+            food: {...this.food}
+        };
+
+        // 恢复正常速度
         this.isPoweredUp = false;
         this.speed = this.originalSpeed;
         
         // 显示状态变化提示
         this.showNotification('无敌模式结束！', 'power-down');
         
+        // 恢复游戏状态
+        this.isGameActive = currentState.isGameActive;
+        this.isPaused = currentState.isPaused;
+        this.score = currentState.score;
+        this.snake = currentState.snake;
+        this.direction = currentState.direction;
+        this.food = currentState.food;
+
         // 确保游戏继续运行
-        if (this.isGameActive) {
-            // 如果游戏还在进行中，继续游戏循环
-            if (!this.gameLoop) {
-                this.startGameLoop();
-            }
+        if (this.isGameActive && !this.gameLoop) {
+            this.startGameLoop();
         }
+
+        console.log('Power-up deactivated, game state restored');
     }
 
     startGameLoop() {
+        if (this.gameLoop) {
+            cancelAnimationFrame(this.gameLoop);
+        }
+
         const gameLoop = (timestamp) => {
-            if (!this.lastUpdateTime) this.lastUpdateTime = timestamp;
+            if (!this.lastUpdateTime) {
+                this.lastUpdateTime = timestamp;
+            }
             
             const deltaTime = timestamp - this.lastUpdateTime;
             
             if (deltaTime >= this.speed) {
                 if (!this.isPaused && this.isGameActive) {
-                    this.update();
-                    this.draw();
-                    this.lastUpdateTime = timestamp;
+                    try {
+                        this.update();
+                        this.draw();
+                        this.lastUpdateTime = timestamp;
+                    } catch (error) {
+                        console.error('Game loop error:', error);
+                        this.gameOver();
+                        return;
+                    }
                 }
             }
             
@@ -462,23 +491,40 @@ class Game {
     }
 
     draw() {
-        // 使用离屏渲染
-        this.offscreenCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // 清除画布
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // 只在需要时重绘背景网格
-        if (this.frameCount % 30 === 0) {
-            this.drawGrid(this.offscreenCtx);
+        // 绘制网格
+        this.drawGrid();
+        
+        // 绘制障碍物（在蛇和食物之前绘制）
+        this.drawObstacles();
+        
+        // 绘制蛇
+        this.drawSnake();
+        
+        // 绘制食物
+        this.drawFood();
+        
+        // 如果是变身状态，添加特效
+        if (this.isPoweredUp) {
+            this.drawPowerUpEffect();
         }
         
-        // 绘制游戏元素
-        this.drawSnake(this.offscreenCtx);
-        this.drawFood(this.offscreenCtx);
+        // 如果游戏暂停，绘制暂停状态
+        if (this.isPaused) {
+            this.drawPauseState();
+        }
+    }
+
+    drawPauseState() {
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // 复制到主画布
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.drawImage(this.offscreenCanvas, 0, 0);
-        
-        this.frameCount++;
+        this.ctx.fillStyle = '#fff';
+        this.ctx.font = '30px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('游戏已暂停', this.canvas.width/2, this.canvas.height/2);
     }
 
     // 使用 requestAnimationFrame 的平滑动画
@@ -745,47 +791,52 @@ class Game {
     update() {
         if (this.isPaused) return;
 
-        const head = {...this.snake[0]};
-        
-        // 更新头部位置
-        switch(this.direction) {
-            case 'up': head.y--; break;
-            case 'down': head.y++; break;
-            case 'left': head.x--; break;
-            case 'right': head.x++; break;
-        }
+        try {
+            const head = {...this.snake[0]};
+            
+            // 更新头部位置
+            switch(this.direction) {
+                case 'up': head.y--; break;
+                case 'down': head.y++; break;
+                case 'left': head.x--; break;
+                case 'right': head.x++; break;
+            }
 
-        // 检查边界碰撞
-        const hitBoundary = this.checkBoundaryCollision(head);
-        if (hitBoundary) {
-            if (this.isPoweredUp) {
-                // 变身状态下穿墙
-                if (head.x < 0) head.x = Math.floor(this.canvas.width / 20) - 1;
-                if (head.x >= this.canvas.width / 20) head.x = 0;
-                if (head.y < 0) head.y = Math.floor(this.canvas.height / 20) - 1;
-                if (head.y >= this.canvas.height / 20) head.y = 0;
-            } else {
-                // 非变身状态下碰到边界直接结束游戏
+            // 检查边界碰撞
+            const hitBoundary = this.checkBoundaryCollision(head);
+            if (hitBoundary) {
+                if (this.isPoweredUp) {
+                    // 变身状态下穿墙
+                    if (head.x < 0) head.x = Math.floor(this.canvas.width / 20) - 1;
+                    if (head.x >= this.canvas.width / 20) head.x = 0;
+                    if (head.y < 0) head.y = Math.floor(this.canvas.height / 20) - 1;
+                    if (head.y >= this.canvas.height / 20) head.y = 0;
+                } else {
+                    console.log('Game over: boundary collision');
+                    this.gameOver();
+                    return;
+                }
+            }
+
+            // 检查其他碰撞
+            if (!this.isPoweredUp && this.checkOtherCollisions(head)) {
+                console.log('Game over: collision detected');
                 this.gameOver();
                 return;
             }
-        }
 
-        // 检查其他碰撞（自身和障碍物）
-        if (!this.isPoweredUp && this.checkOtherCollisions(head)) {
+            // 更新蛇的位置
+            if (head.x === this.food.x && head.y === this.food.y) {
+                this.handleFoodCollision();
+            } else {
+                this.snake.pop();
+            }
+
+            this.snake.unshift(head);
+        } catch (error) {
+            console.error('Update error:', error);
             this.gameOver();
-            return;
         }
-
-        // 检查是否吃到食物
-        if (head.x === this.food.x && head.y === this.food.y) {
-            this.handleFoodCollision();
-        } else {
-            this.snake.pop();
-        }
-
-        // 只有在确保位置有效后才更新蛇的位置
-        this.snake.unshift(head);
     }
 
     checkBoundaryCollision(head) {
@@ -820,18 +871,26 @@ class Game {
         this.resetGame();
         this.isPaused = false;
         this.isGameActive = true;
+        this.lastUpdateTime = 0;
         
-        // 使用 requestAnimationFrame 替代 setInterval
         const gameLoop = (timestamp) => {
-            if (!this.lastUpdateTime) this.lastUpdateTime = timestamp;
+            if (!this.lastUpdateTime) {
+                this.lastUpdateTime = timestamp;
+            }
             
             const deltaTime = timestamp - this.lastUpdateTime;
             
             if (deltaTime >= this.speed) {
                 if (!this.isPaused && this.isGameActive) {
-                    this.update();
-                    this.draw();
-                    this.lastUpdateTime = timestamp;
+                    try {
+                        this.update();
+                        this.draw();
+                        this.lastUpdateTime = timestamp;
+                    } catch (error) {
+                        console.error('Game loop error:', error);
+                        this.gameOver();
+                        return;
+                    }
                 }
             }
             
@@ -969,13 +1028,24 @@ class Game {
     // 动态难度调整
     updateDifficulty() {
         if (this.score > 0 && this.score % this.difficultyIncrease.scoreThreshold === 0) {
+            // 确保新速度不会低于最小限制
             const newSpeed = Math.max(
                 this.speed - this.difficultyIncrease.speedIncrement,
                 this.difficultyIncrease.maxSpeed
             );
-            if (newSpeed !== this.speed) {
+            
+            // 只有当速度确实发生变化时才更新
+            if (newSpeed !== this.speed && newSpeed >= this.difficultyIncrease.maxSpeed) {
+                const oldSpeed = this.speed;
                 this.speed = newSpeed;
-                this.showNotification('速度提升！', 'speed-up');
+                
+                // 显示速度提升通知
+                this.showNotification(
+                    `速度提升！(${Math.round((oldSpeed - newSpeed) / oldSpeed * 100)}%)`, 
+                    'speed-up'
+                );
+                
+                console.log(`Speed increased: ${oldSpeed} -> ${newSpeed}`);
             }
         }
     }
@@ -999,6 +1069,60 @@ class Game {
         }
         
         this.lastScoreTime = now;
+    }
+
+    drawSnake() {
+        // 绘制蛇身
+        this.snake.forEach((segment, index) => {
+            if (index === 0) {
+                // 绘制蛇头
+                this.drawSnakeHead(segment);
+            } else {
+                // 绘制蛇身
+                this.drawSnakeBody(segment, index);
+            }
+        });
+    }
+
+    drawObstacles() {
+        if (!this.obstacles || !this.obstacles.length) return;
+        
+        this.ctx.fillStyle = '#795548';
+        this.obstacles.forEach(obstacle => {
+            // 绘制障碍物主体
+            this.ctx.fillStyle = 'rgba(121, 85, 72, 0.8)';
+            this.ctx.fillRect(
+                obstacle.x * 20,
+                obstacle.y * 20,
+                obstacle.width * 20,
+                obstacle.height * 20
+            );
+            
+            // 添加边框效果
+            this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeRect(
+                obstacle.x * 20,
+                obstacle.y * 20,
+                obstacle.width * 20,
+                obstacle.height * 20
+            );
+            
+            // 添加纹理效果
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            for (let i = 0; i < obstacle.width; i++) {
+                for (let j = 0; j < obstacle.height; j++) {
+                    if ((i + j) % 2 === 0) {
+                        this.ctx.fillRect(
+                            (obstacle.x + i) * 20,
+                            (obstacle.y + j) * 20,
+                            20,
+                            20
+                        );
+                    }
+                }
+            }
+        });
     }
 }
 
