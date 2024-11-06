@@ -56,10 +56,32 @@ class Game {
                 animation: 'lightning'
             }
         ];
+        this.isGameActive = false;
+        this.lastUpdateTime = 0;
+        this.updateInterval = 1000/60;
+
+        // 添加错误处理
+        window.addEventListener('error', (e) => {
+            // 忽略第三方脚本错误
+            if (e.filename && !e.filename.includes('snake-game')) {
+                e.preventDefault();
+                return;
+            }
+            console.error('Game Error:', e.message);
+        });
+
+        // 忽略未处理的 Promise 拒绝
+        window.addEventListener('unhandledrejection', (e) => {
+            if (e.reason && e.reason.toString().includes('Could not establish connection')) {
+                e.preventDefault();
+                return;
+            }
+        });
     }
 
     init() {
         console.log('Initializing game...');
+        this.checkPermissions();
         this.canvas = document.getElementById('gameCanvas');
         if (!this.canvas) {
             console.error('Canvas element not found');
@@ -68,6 +90,7 @@ class Game {
         this.ctx = this.canvas.getContext('2d');
         this.resetGame();
         this.setupEventListeners();
+        this.generateIcons();
         this.draw();
         console.log('Game initialized successfully');
     }
@@ -186,11 +209,12 @@ class Game {
     }
 
     gameOver() {
-        clearInterval(this.gameLoop);
-        this.gameLoop = null;
-        
-        // 确保蛇的位置在画布内
-        this.resetGame();
+        console.log('Game Over');
+        this.isGameActive = false;
+        if (this.gameLoop) {
+            cancelAnimationFrame(this.gameLoop);
+            this.gameLoop = null;
+        }
         
         // 更新最高分
         const currentHighScore = localStorage.getItem('highScore') || 0;
@@ -201,21 +225,21 @@ class Game {
             }
         }
         
+        this.resetGame();
         document.getElementById('startBtn').textContent = '开始游戏';
-        this.playSound('gameOver');
+        this.showGameOverScreen();
     }
 
     togglePause() {
         console.log('Toggling pause state');
-        this.isPaused = !this.isPaused;
+        if (!this.isGameActive) return;
         
-        // 更新按钮文本
+        this.isPaused = !this.isPaused;
         const pauseBtn = document.getElementById('pauseBtn');
         if (pauseBtn) {
             pauseBtn.textContent = this.isPaused ? '继续' : '暂停';
         }
         
-        // 显示暂停状态
         this.showPauseStatus();
     }
 
@@ -688,24 +712,35 @@ class Game {
 
     startGame() {
         console.log('Starting game...');
-        // 清除可能存在的旧游戏循环
         if (this.gameLoop) {
-            clearInterval(this.gameLoop);
+            cancelAnimationFrame(this.gameLoop);
             this.gameLoop = null;
         }
         
-        // 重置游戏状态
         this.resetGame();
         this.isPaused = false;
+        this.isGameActive = true;
         
-        // 启动游戏循环
-        this.gameLoop = setInterval(() => {
-            if (!this.isPaused) {
-                this.update();
-                this.draw();
+        // 使用 requestAnimationFrame 替代 setInterval
+        const gameLoop = (timestamp) => {
+            if (!this.lastUpdateTime) this.lastUpdateTime = timestamp;
+            
+            const deltaTime = timestamp - this.lastUpdateTime;
+            
+            if (deltaTime >= this.speed) {
+                if (!this.isPaused && this.isGameActive) {
+                    this.update();
+                    this.draw();
+                    this.lastUpdateTime = timestamp;
+                }
             }
-        }, this.speed);
+            
+            if (this.isGameActive) {
+                this.gameLoop = requestAnimationFrame(gameLoop);
+            }
+        };
         
+        this.gameLoop = requestAnimationFrame(gameLoop);
         document.getElementById('startBtn').textContent = '重新开始';
         console.log('Game started successfully');
     }
@@ -785,7 +820,86 @@ class Game {
     drawGoldenSparkles(x, y) {
         // 添加金色粒子效果
     }
+
+    showGameOverScreen() {
+        const gameOverScreen = document.createElement('div');
+        gameOverScreen.className = 'game-over-screen';
+        gameOverScreen.innerHTML = `
+            <div class="game-over-content">
+                <h2>游戏结束</h2>
+                <p>得分: ${this.score}</p>
+                <button onclick="window.gameManager.game.startGame()">重新开始</button>
+            </div>
+        `;
+        
+        document.body.appendChild(gameOverScreen);
+        
+        setTimeout(() => {
+            gameOverScreen.remove();
+        }, 2000);
+    }
+
+    cleanup() {
+        // 清理游戏资源
+        if (this.gameLoop) {
+            cancelAnimationFrame(this.gameLoop);
+            this.gameLoop = null;
+        }
+        this.isGameActive = false;
+        this.isPaused = false;
+    }
+
+    generateIcons() {
+        const sizes = [16, 32, 192, 512];
+        sizes.forEach(size => {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // 绘制图标
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, size, size);
+            
+            // 绘制蛇
+            ctx.fillStyle = '#4CAF50';
+            const snakeSize = size / 8;
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.arc(size/2 - i*snakeSize, size/2, snakeSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // 保存图标
+            const link = document.createElement('a');
+            link.download = `icon-${size}x${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+
+    checkPermissions() {
+        // 检查并请求必要的权限
+        if ('permissions' in navigator) {
+            Promise.all([
+                navigator.permissions.query({ name: 'accelerometer' }),
+                navigator.permissions.query({ name: 'gyroscope' })
+            ]).catch(() => {
+                // 忽略权限错误
+                console.log('Permissions not available');
+            });
+        }
+    }
 }
+
+// 添加页面卸载时的清理
+window.addEventListener('beforeunload', () => {
+    if (window.gameManager && window.gameManager.game) {
+        window.gameManager.game.cleanup();
+    }
+});
 
 // 确保在全局范围内可访问
 window.Game = Game;
