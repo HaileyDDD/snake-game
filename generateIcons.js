@@ -1,6 +1,15 @@
 class IconManager {
     constructor() {
         this.icons = {};
+        this.initialized = false;
+    }
+
+    init() {
+        if (this.initialized) return;
+        
+        // 生成并更新图标
+        this.generateIcons();
+        this.initialized = true;
     }
 
     generateIcons() {
@@ -28,12 +37,12 @@ class IconManager {
             const dataUrl = canvas.toDataURL('image/png');
             this.icons[`icon-${size}x${size}`] = dataUrl;
             
-            // 更新页面中的图标链接
-            this.updateIconLink(size, dataUrl);
+            // 更新页面中的图标
+            this.updateIconInDocument(size, dataUrl);
         });
     }
 
-    updateIconLink(size, dataUrl) {
+    updateIconInDocument(size, dataUrl) {
         // 更新 favicon
         if (size === 16 || size === 32) {
             let link = document.querySelector(`link[sizes="${size}x${size}"]`);
@@ -46,13 +55,19 @@ class IconManager {
             }
             link.href = dataUrl;
         }
-        
+
         // 更新 apple-touch-icon
         if (size === 192) {
             let appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
             if (appleIcon) {
                 appleIcon.href = dataUrl;
             }
+        }
+
+        // 更新 manifest 图标
+        if (size === 192 || size === 512) {
+            // 在这里可以更新 manifest 的图标，但需要服务器支持
+            console.log(`Icon ${size}x${size} generated and updated`);
         }
     }
 
@@ -64,9 +79,12 @@ class IconManager {
 // 创建单例实例
 const iconManager = new IconManager();
 
-// 页面加载完成后生成图标
+// 页面加载完成后初始化一次
 document.addEventListener('DOMContentLoaded', () => {
-    iconManager.generateIcons();
+    // 延迟初始化，确保其他资源加载完成
+    setTimeout(() => {
+        iconManager.init();
+    }, 100);
 });
 
 // 导出实例供其他模块使用

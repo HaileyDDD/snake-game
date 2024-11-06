@@ -60,6 +60,20 @@ class Game {
         this.lastUpdateTime = 0;
         this.updateInterval = 1000/60;
 
+        this.difficultyIncrease = {
+            speedIncrement: 2,  // 每吃到食物增加的速度
+            maxSpeed: 50,       // 最大速度限制
+            scoreThreshold: 50  // 每多少分增加一次难度
+        };
+        
+        // 添加游戏统计
+        this.stats = {
+            totalGames: 0,
+            bestScore: 0,
+            totalPlayTime: 0,
+            startTime: null
+        };
+
         // 添加错误处理
         window.addEventListener('error', (e) => {
             // 忽略第三方脚本错误
@@ -77,6 +91,10 @@ class Game {
                 return;
             }
         });
+
+        this.offscreenCanvas = document.createElement('canvas');
+        this.offscreenCtx = this.offscreenCanvas.getContext('2d');
+        this.frameCount = 0;
     }
 
     init() {
@@ -90,7 +108,6 @@ class Game {
         this.ctx = this.canvas.getContext('2d');
         this.resetGame();
         this.setupEventListeners();
-        this.generateIcons();
         this.draw();
         console.log('Game initialized successfully');
     }
@@ -134,6 +151,38 @@ class Game {
                 this.speed = 200 - (e.target.value * 15);
             });
         }
+
+        // 添加触摸控制
+        let touchStartX = 0;
+        let touchStartY = 0;
+        
+        this.canvas.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            e.preventDefault();
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchmove', (e) => {
+            if (!touchStartX || !touchStartY) return;
+
+            const touchEndX = e.touches[0].clientX;
+            const touchEndY = e.touches[0].clientY;
+
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // 水平滑动
+                this.direction = deltaX > 0 ? 'right' : 'left';
+            } else {
+                // 垂直滑动
+                this.direction = deltaY > 0 ? 'down' : 'up';
+            }
+
+            touchStartX = touchEndX;
+            touchStartY = touchEndY;
+            e.preventDefault();
+        }, { passive: false });
     }
 
     resetGame() {
@@ -228,6 +277,15 @@ class Game {
         this.resetGame();
         document.getElementById('startBtn').textContent = '开始游戏';
         this.showGameOverScreen();
+
+        // 更新统计
+        if (this.stats.startTime) {
+            this.stats.totalPlayTime += (Date.now() - this.stats.startTime) / 1000;
+        }
+        if (this.score > this.stats.bestScore) {
+            this.stats.bestScore = this.score;
+        }
+        localStorage.setItem('gameStats', JSON.stringify(this.stats));
     }
 
     togglePause() {
@@ -275,6 +333,8 @@ class Game {
 
         this.spawnFood();
         this.updateScore();
+        this.showCombo();
+        this.updateDifficulty();
     }
 
     activatePowerUp() {
@@ -352,7 +412,7 @@ class Game {
     }
 
     deactivatePowerUp(powerUpLevel) {
-        // 不要改变游戏状态，只需要��复正常速度
+        // 不要改变游戏状态，只需要复正常速度
         this.isPoweredUp = false;
         this.speed = this.originalSpeed;
         
@@ -402,39 +462,38 @@ class Game {
     }
 
     draw() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // 使用离屏渲染
+        this.offscreenCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // 绘制网格背景
-        this.drawGrid();
-        
-        // 绘制蛇
-        this.snake.forEach((segment, index) => {
-            if (index === 0) {
-                // 蛇头
-                this.drawSnakeHead(segment);
-            } else {
-                // 蛇身
-                this.drawSnakeBody(segment, index);
-            }
-        });
-        
-        // 绘制食物
-        this.drawFood();
-        
-        // 绘制特
-        if (this.isPoweredUp) {
-            this.drawPowerUpEffect();
+        // 只在需要时重绘背景网格
+        if (this.frameCount % 30 === 0) {
+            this.drawGrid(this.offscreenCtx);
         }
         
-        // 如果游戏暂停，绘制半透明遮罩
-        if (this.isPaused) {
-            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            
-            this.ctx.fillStyle = '#fff';
-            this.ctx.font = '30px Arial';
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText('游戏已暂停', this.canvas.width/2, this.canvas.height/2);
+        // 绘制游戏元素
+        this.drawSnake(this.offscreenCtx);
+        this.drawFood(this.offscreenCtx);
+        
+        // 复制到主画布
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.drawImage(this.offscreenCanvas, 0, 0);
+        
+        this.frameCount++;
+    }
+
+    // 使用 requestAnimationFrame 的平滑动画
+    animate() {
+        if (!this.isPaused && this.isGameActive) {
+            const now = performance.now();
+            const delta = now - this.lastUpdateTime;
+
+            if (delta >= this.speed) {
+                this.update();
+                this.draw();
+                this.lastUpdateTime = now;
+            }
+
+            requestAnimationFrame(() => this.animate());
         }
     }
 
@@ -784,6 +843,10 @@ class Game {
         this.gameLoop = requestAnimationFrame(gameLoop);
         document.getElementById('startBtn').textContent = '重新开始';
         console.log('Game started successfully');
+
+        this.stats.startTime = Date.now();
+        this.stats.totalGames++;
+        localStorage.setItem('gameStats', JSON.stringify(this.stats));
     }
 
     playSound(soundName) {
@@ -890,37 +953,6 @@ class Game {
         this.isPaused = false;
     }
 
-    generateIcons() {
-        const sizes = [16, 32, 192, 512];
-        sizes.forEach(size => {
-            const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
-            
-            // 绘制图标
-            ctx.fillStyle = '#1a1a2e';
-            ctx.fillRect(0, 0, size, size);
-            
-            // 绘制蛇
-            ctx.fillStyle = '#4CAF50';
-            const snakeSize = size / 8;
-            for (let i = 0; i < 3; i++) {
-                ctx.beginPath();
-                ctx.arc(size/2 - i*snakeSize, size/2, snakeSize, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            
-            // 保存图标
-            const link = document.createElement('a');
-            link.download = `icon-${size}x${size}.png`;
-            link.href = canvas.toDataURL('image/png');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
-    }
-
     checkPermissions() {
         // 检查并请求必要的权限
         if ('permissions' in navigator) {
@@ -932,6 +964,41 @@ class Game {
                 console.log('Permissions not available');
             });
         }
+    }
+
+    // 动态难度调整
+    updateDifficulty() {
+        if (this.score > 0 && this.score % this.difficultyIncrease.scoreThreshold === 0) {
+            const newSpeed = Math.max(
+                this.speed - this.difficultyIncrease.speedIncrement,
+                this.difficultyIncrease.maxSpeed
+            );
+            if (newSpeed !== this.speed) {
+                this.speed = newSpeed;
+                this.showNotification('速度提升！', 'speed-up');
+            }
+        }
+    }
+
+    showCombo() {
+        let combo = 0;
+        const now = Date.now();
+        const comboTimeWindow = 2000; // 2秒内的连续得分算作连击
+
+        if (this.lastScoreTime && (now - this.lastScoreTime) < comboTimeWindow) {
+            combo = (this.comboCount || 0) + 1;
+            this.comboCount = combo;
+            
+            if (combo > 2) {
+                this.showNotification(`${combo}连击！`, 'combo');
+                // 连击加分
+                this.score += combo * 2;
+            }
+        } else {
+            this.comboCount = 0;
+        }
+        
+        this.lastScoreTime = now;
     }
 }
 
