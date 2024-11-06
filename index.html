@@ -32,9 +32,13 @@
     <meta name="twitter:image" content="https://haileyddd.github.io/snake-game/preview.jpg">
 
     <!-- 移动端优化 -->
-    <meta name="theme-color" content="#4CAF50">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4CAF50">
+    
+    <!-- 权限策略 -->
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=(), gyroscope=(), accelerometer=()">
     
     <!-- 规范链接 -->
     <link rel="canonical" href="https://haileyddd.github.io/snake-game/">
@@ -180,5 +184,17 @@
     </footer>
 
     <!-- 其他脚本引用保持不变 -->
+    <script>
+        // 忽略特定的错误
+        window.addEventListener('error', function(e) {
+            if (e.message.includes('postMessage') || 
+                e.message.includes('Permissions policy') ||
+                e.message.includes('deviceorientation')) {
+                e.preventDefault();
+                return;
+            }
+            console.error('Game Error:', e);
+        });
+    </script>
 </body>
 </html>

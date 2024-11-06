@@ -54,14 +54,22 @@ body {
 }
 
 .nav-button {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 8px 16px;
     border-radius: 6px;
-    color: #fff;
+    color: #ffffff;
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 14px;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.nav-button:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* 主要内容区域 */
@@ -752,4 +760,70 @@ html {
     0% { transform: translate(-50%, -50%) scale(0); }
     50% { transform: translate(-50%, -50%) scale(1.2); }
     100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* 语言选择按钮样式优化 */
+.nav-button {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 6px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.nav-button:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 下拉菜单样式优化 */
+.dropdown-content {
+    background: rgba(40, 44, 52, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 8px 0;
+    margin-top: 5px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-item {
+    color: #ffffff;
+    padding: 10px 20px;
+    text-decoration: none;
+    display: block;
+    transition: 0.2s;
+    font-size: 14px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #4CAF50;
+}
+
+/* 当前选中的语言项样式 */
+.dropdown-item.active {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+}
+
+/* 添加图标样式 */
+.nav-button::before {
+    margin-right: 6px;
+    opacity: 0.9;
+}
+
+.nav-button.settings::before {
+    content: "⚙️";
+}
+
+.nav-button.language::before {
+    content: "🌐";
 }

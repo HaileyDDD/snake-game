@@ -1,0 +1,21 @@
+{
+    "name": "超级贪吃蛇",
+    "short_name": "贪吃蛇",
+    "description": "创新玩法的经典贪吃蛇游戏",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#1a1a2e",
+    "theme_color": "#4CAF50",
+    "icons": [
+        {
+            "src": "icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+} 
